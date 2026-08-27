@@ -6,7 +6,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
-import 'package:flutter_hbb/common/widgets/animated_rotation_widget.dart';
 import 'package:flutter_hbb/common/widgets/custom_password.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
@@ -16,7 +15,6 @@ import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
-import 'package:flutter_hbb/plugin/ui_manager.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:flutter_hbb/utils/platform_channel.dart';
 import 'package:get/get.dart';
@@ -33,7 +31,7 @@ class DesktopHomePage extends StatefulWidget {
   State<DesktopHomePage> createState() => _DesktopHomePageState();
 }
 
-const borderColor = Color(0xFF2F65BA);
+const borderColor = Color(0xFFFFD600);
 
 class _DesktopHomePageState extends State<DesktopHomePage>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
@@ -111,7 +109,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           }
         },
       ),
-      buildPluginEntry(),
     ];
     if (isIncomingOnly) {
       children.addAll([
@@ -291,11 +288,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   buildPasswordBoard2(BuildContext context, ServerModel model) {
-    RxBool refreshHover = false.obs;
     RxBool editHover = false.obs;
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
-    final showOneTime = model.approveMode != 'click' &&
-        model.verificationMethod != kUsePermanentPassword;
     return Container(
       margin: EdgeInsets.only(left: 20.0, right: 16, top: 13, bottom: 13),
       child: Row(
@@ -314,71 +308,40 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AutoSizeText(
-                    translate("One-time Password"),
+                    'Senha de acesso',
                     style: TextStyle(
                         fontSize: 14, color: textColor?.withOpacity(0.5)),
                     maxLines: 1,
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onDoubleTap: () {
-                            if (showOneTime) {
-                              Clipboard.setData(
-                                  ClipboardData(text: model.serverPasswd.text));
-                              showToast(translate("Copied"));
-                            }
-                          },
-                          child: TextFormField(
-                            controller: model.serverPasswd,
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding:
-                                  EdgeInsets.only(top: 14, bottom: 10),
+                  if (!bind.isDisableSettings())
+                    InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: setPasswordDialog,
+                      onHover: (value) => editHover.value = value,
+                      child: Obx(() => Padding(
+                            padding: const EdgeInsets.only(top: 10, bottom: 8),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.key_rounded,
+                                  color: editHover.value
+                                      ? const Color(0xFF111111)
+                                      : MyTheme.accent,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 7),
+                                Text(
+                                  'Criar ou alterar senha de acesso',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                            style: TextStyle(fontSize: 15),
-                          ).workaroundFreezeLinuxMint(),
-                        ),
-                      ),
-                      if (showOneTime)
-                        AnimatedRotationWidget(
-                          onPressed: () => bind.mainUpdateTemporaryPassword(),
-                          child: Tooltip(
-                            message: translate('Refresh Password'),
-                            child: Obx(() => RotatedBox(
-                                quarterTurns: 2,
-                                child: Icon(
-                                  Icons.refresh,
-                                  color: refreshHover.value
-                                      ? textColor
-                                      : Color(0xFFDDDDDD),
-                                  size: 22,
-                                ))),
-                          ),
-                          onHover: (value) => refreshHover.value = value,
-                        ).marginOnly(right: 8, top: 4),
-                      if (!bind.isDisableSettings())
-                        InkWell(
-                          child: Tooltip(
-                            message: translate('Change Password'),
-                            child: Obx(
-                              () => Icon(
-                                Icons.edit,
-                                color: editHover.value
-                                    ? textColor
-                                    : Color(0xFFDDDDDD),
-                                size: 22,
-                              ).marginOnly(right: 8, top: 4),
-                            ),
-                          ),
-                          onTap: () => DesktopSettingPage.switch2page(
-                              SettingsTabKey.safety),
-                          onHover: (value) => editHover.value = value,
-                        ),
-                    ],
-                  ),
+                          )),
+                    ),
                 ],
               ),
             ),
@@ -782,13 +745,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         windowOnTop(null);
       } else if (call.method == kWindowRefreshCurrentUser) {
         gFFI.userModel.refreshCurrentUser();
-      } else if (call.method == kWindowGetWindowInfo) {
-        final screen = (await window_size.getWindowInfo()).screen;
-        if (screen == null) {
-          return '';
-        } else {
-          return jsonEncode(screenToMap(screen));
-        }
       } else if (call.method == kWindowGetScreenList) {
         return jsonEncode(
             (await window_size.getScreenList()).map(screenToMap).toList());
@@ -889,21 +845,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     if (state == AppLifecycleState.resumed) {
       shouldBeBlocked(_block, canBeBlocked);
     }
-  }
-
-  Widget buildPluginEntry() {
-    final entries = PluginUiManager.instance.entries.entries;
-    return Offstage(
-      offstage: entries.isEmpty,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...entries.map((entry) {
-            return entry.value;
-          })
-        ],
-      ),
-    );
   }
 }
 
