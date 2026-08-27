@@ -758,5 +758,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Continue", "Folytatás"),
         ("Browser didn't open? Use the url below to sign in.", "Nem nyílt meg a böngésző? A belépéshez használja az alábbi URL-címet."),
         ("Lock canvas", "Nézet zárolása"),
+        ("Enable WebRTC P2P connection", "WebRTC P2P kapcsolat engedélyezése"),
+        ("Enable TCP hole punching", "TCP résszűrés engedélyezése"),
     ].iter().cloned().collect();
 }
