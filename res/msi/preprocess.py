@@ -536,11 +536,13 @@ def init_global_vars(dist_dir, app_name, args):
     dist_app = dist_dir.joinpath(app_name + ".exe")
 
     def read_process_output(args):
+        # Pass the executable and its arguments separately. Building a shell
+        # command string breaks custom app names containing spaces.
         process = subprocess.Popen(
-            f"{dist_app} {args}",
+            [str(dist_app), *args.split()],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            shell=True,
+            shell=False,
         )
         output, _ = process.communicate()
         return output.decode("utf-8").strip()
