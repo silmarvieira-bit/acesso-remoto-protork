@@ -169,8 +169,21 @@ class _PeerTabPageState extends State<PeerTabPage>
                         decoration: (hover.value
                             ? (selected ? decoBorder : deco)
                             : (selected ? decoBorder : null)),
-                        child: Icon(model.tabIcon(t), color: color)
-                            .paddingSymmetric(horizontal: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(model.tabIcon(t), color: color)
+                                .paddingSymmetric(horizontal: 4),
+                            if (t == PeerTabIndex.lan.index)
+                              Text('Computadores',
+                                      style: TextStyle(
+                                          color: color,
+                                          fontWeight: selected
+                                              ? FontWeight.w600
+                                              : FontWeight.normal))
+                                  .marginOnly(right: 5),
+                          ],
+                        ),
                       ).paddingSymmetric(horizontal: 4),
                       onTap: isOptionFixed(kOptionPeerTabIndex)
                           ? null
@@ -668,7 +681,9 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return drawer
+    final isComputersTab =
+        gFFI.peerTabModel.currentTab == PeerTabIndex.lan.index;
+    return drawer || isComputersTab
         ? _buildSearchBar()
         : _hoverAction(
             context: context,
@@ -730,8 +745,12 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
                         decoration: InputDecoration(
                           contentPadding:
                               const EdgeInsets.symmetric(vertical: 6),
-                          hintText:
-                              focused.value ? null : translate("Search ID"),
+                          hintText: focused.value
+                              ? null
+                              : (gFFI.peerTabModel.currentTab ==
+                                      PeerTabIndex.lan.index
+                                  ? 'Buscar por nome'
+                                  : translate("Search ID")),
                           hintStyle: TextStyle(
                               fontSize: 14, color: Theme.of(context).hintColor),
                           border: InputBorder.none,
