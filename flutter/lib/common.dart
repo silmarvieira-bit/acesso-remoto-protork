@@ -579,10 +579,11 @@ class MyTheme {
   );
 
   static ThemeMode getThemeModePreference() {
-    return themeModeFromString(bind.mainGetLocalOption(key: kCommConfKeyTheme));
+    return ThemeMode.dark;
   }
 
-  static Future<void> changeDarkMode(ThemeMode mode) async {
+  static Future<void> changeDarkMode(ThemeMode _) async {
+    const mode = ThemeMode.dark;
     Get.changeThemeMode(mode);
     if (desktopType == DesktopType.main || isAndroid || isIOS || isWeb) {
       if (mode == ThemeMode.system) {
@@ -599,17 +600,7 @@ class MyTheme {
   }
 
   static ThemeMode currentThemeMode() {
-    final preference = getThemeModePreference();
-    if (preference == ThemeMode.system) {
-      if (WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-          Brightness.light) {
-        return ThemeMode.light;
-      } else {
-        return ThemeMode.dark;
-      }
-    } else {
-      return preference;
-    }
+    return ThemeMode.dark;
   }
 
   static ColorThemeExtension color(BuildContext context) {
@@ -621,14 +612,7 @@ class MyTheme {
   }
 
   static ThemeMode themeModeFromString(String v) {
-    switch (v) {
-      case "light":
-        return ThemeMode.light;
-      case "dark":
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
+    return ThemeMode.dark;
   }
 }
 
