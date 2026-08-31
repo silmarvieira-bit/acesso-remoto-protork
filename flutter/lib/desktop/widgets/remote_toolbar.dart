@@ -253,7 +253,7 @@ class ToolbarState {
   bool _isInitializing = false;
 
   ToolbarState() {
-    _pin = RxBool(false);
+    _pin = RxBool(true);
     final s = bind.getLocalFlutterOption(k: kOptionRemoteMenubarState);
     if (s.isEmpty) {
       return;
@@ -262,7 +262,7 @@ class ToolbarState {
     try {
       final m = jsonDecode(s);
       if (m != null) {
-        _pin = RxBool(m['pin'] ?? false);
+        _pin = RxBool(true);
       }
     } catch (e) {
       debugPrint('Failed to decode toolbar state ${e.toString()}');
@@ -279,15 +279,15 @@ class ToolbarState {
 
     try {
       // Load both states in parallel for better performance
-      final results = await Future.wait([
+      await Future.wait([
         bind.sessionGetToggleOption(
             sessionId: sessionId, arg: kOptionCollapseToolbar),
         bind.sessionGetToggleOption(
             sessionId: sessionId, arg: kOptionHideToolbar),
       ]);
 
-      collapse.value = results[0] ?? false;
-      hide.value = results[1] ?? false;
+      collapse.value = false;
+      hide.value = false;
     } finally {
       _isInitializing = false;
       initialized.value = true;
@@ -295,26 +295,23 @@ class ToolbarState {
   }
 
   switchCollapse(SessionID sessionId) async {
-    bind.sessionToggleOption(
-        sessionId: sessionId, value: kOptionCollapseToolbar);
-    collapse.value = !collapse.value;
+    collapse.value = false;
   }
 
   // Switch hide state for entire toolbar visibility
   switchHide(SessionID sessionId) async {
-    bind.sessionToggleOption(sessionId: sessionId, value: kOptionHideToolbar);
-    hide.value = !hide.value;
+    hide.value = false;
   }
 
   switchPin() async {
-    _pin.value = !_pin.value;
+    _pin.value = true;
     // Save everytime changed, as this func will not be called frequently
     await _savePin();
   }
 
   setPin(bool v) async {
-    if (_pin.value != v) {
-      _pin.value = v;
+    if (!_pin.value) {
+      _pin.value = true;
       // Save everytime changed, as this func will not be called frequently
       await _savePin();
     }
@@ -334,6 +331,10 @@ class _ToolbarTheme {
 
   static const Color redColor = Colors.redAccent;
   static const Color hoverRedColor = Colors.red;
+  static const Color protorkYellow = Color(0xFFFFD400);
+  static const Color protorkYellowHover = Color(0xFFFFE45C);
+  static const Color fileGreen = Color(0xFF00C896);
+  static const Color fileGreenHover = Color(0xFF46E5BE);
   // kMinInteractiveDimension
   static const double height = 20.0;
   static const double dividerHeight = 12.0;
@@ -847,6 +848,10 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
     // Do not show keyboard for camera connection type.
     if (widget.ffi.connType == ConnType.defaultConn) {
       toolbarItems.add(_KeyboardMenu(id: widget.id, ffi: widget.ffi));
+      toolbarItems.add(_BlockInputMenu(id: widget.id, ffi: widget.ffi));
+      toolbarItems.add(_CopyFileMenu(ffi: widget.ffi));
+      toolbarItems.add(_PasteFileMenu(ffi: widget.ffi));
+      toolbarItems.add(_FileTransferMenu(id: widget.id, ffi: widget.ffi));
     }
     toolbarItems.add(_ChatMenu(id: widget.id, ffi: widget.ffi));
     if (!isWeb) {
@@ -945,14 +950,110 @@ class _PinMenu extends StatelessWidget {
         assetName: state.pin ? "assets/pinned.svg" : "assets/unpinned.svg",
         tooltip: state.pin ? 'Unpin Toolbar' : 'Pin Toolbar',
         onPressed: state.switchPin,
-        color:
-            state.pin ? _ToolbarTheme.blueColor : _ToolbarTheme.inactiveColor,
-        hoverColor: state.pin
-            ? _ToolbarTheme.hoverBlueColor
-            : _ToolbarTheme.hoverInactiveColor,
+        color: _ToolbarTheme.protorkYellow,
+        hoverColor: _ToolbarTheme.protorkYellowHover,
       ),
     );
   }
+}
+
+class _BlockInputMenu extends StatelessWidget {
+  final String id;
+  final FFI ffi;
+  const _BlockInputMenu({required this.id, required this.ffi});
+
+  @override
+  Widget build(BuildContext context) {
+    if (ffi.connType != ConnType.defaultConn ||
+        ffi.ffiModel.pi.platform != kPeerPlatformWindows ||
+        !ffi.ffiModel.keyboard) {
+      return const Offstage();
+    }
+    return Obx(() {
+      final state = BlockInputState.find(id);
+      return _IconMenuButton(
+        icon: const Icon(Icons.mouse, color: Colors.white, size: 22),
+        tooltip: state.value
+            ? 'Desbloquear mouse e teclado'
+            : 'Bloquear mouse e teclado',
+        color: state.value
+            ? _ToolbarTheme.redColor
+            : _ToolbarTheme.protorkYellow,
+        hoverColor: state.value
+            ? _ToolbarTheme.hoverRedColor
+            : _ToolbarTheme.protorkYellowHover,
+        onPressed: () {
+          bind.sessionToggleOption(
+            sessionId: ffi.sessionId,
+            value: '${state.value ? 'un' : ''}block-input',
+          );
+          state.value = !state.value;
+        },
+      );
+    });
+  }
+}
+
+void _sendRemoteClipboardShortcut(FFI ffi, String key) {
+  final isMac = ffi.ffiModel.pi.platform == kPeerPlatformMacOS;
+  final old = isMac ? ffi.inputModel.command : ffi.inputModel.ctrl;
+  if (isMac) {
+    ffi.inputModel.command = true;
+  } else {
+    ffi.inputModel.ctrl = true;
+  }
+  ffi.inputModel.inputKey(key);
+  if (isMac) {
+    ffi.inputModel.command = old;
+  } else {
+    ffi.inputModel.ctrl = old;
+  }
+}
+
+class _CopyFileMenu extends StatelessWidget {
+  final FFI ffi;
+  const _CopyFileMenu({required this.ffi});
+
+  @override
+  Widget build(BuildContext context) => _IconMenuButton(
+        icon: const Icon(Icons.copy, color: Colors.white, size: 21),
+        tooltip: 'Copiar arquivo selecionado (Ctrl+C)',
+        color: _ToolbarTheme.fileGreen,
+        hoverColor: _ToolbarTheme.fileGreenHover,
+        onPressed: () => _sendRemoteClipboardShortcut(ffi, 'VK_C'),
+      );
+}
+
+class _PasteFileMenu extends StatelessWidget {
+  final FFI ffi;
+  const _PasteFileMenu({required this.ffi});
+
+  @override
+  Widget build(BuildContext context) => _IconMenuButton(
+        icon: const Icon(Icons.content_paste, color: Colors.white, size: 21),
+        tooltip: 'Colar arquivo (Ctrl+V)',
+        color: _ToolbarTheme.fileGreen,
+        hoverColor: _ToolbarTheme.fileGreenHover,
+        onPressed: () => _sendRemoteClipboardShortcut(ffi, 'VK_V'),
+      );
+}
+
+class _FileTransferMenu extends StatelessWidget {
+  final String id;
+  final FFI ffi;
+  const _FileTransferMenu({required this.id, required this.ffi});
+
+  @override
+  Widget build(BuildContext context) => _IconMenuButton(
+        assetName: 'assets/file_transfer.svg',
+        tooltip: 'Transferir arquivos',
+        color: _ToolbarTheme.fileGreen,
+        hoverColor: _ToolbarTheme.fileGreenHover,
+        onPressed: () {
+          final token = bind.sessionGetConnToken(sessionId: ffi.sessionId);
+          connect(context, id, isFileTransfer: true, connToken: token);
+        },
+      );
 }
 
 class _MobileActionMenu extends StatelessWidget {
