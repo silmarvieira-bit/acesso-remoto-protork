@@ -2358,7 +2358,10 @@ impl LoginConfigHandler {
             if ignore_default {
                 None
             } else {
-                Some(ImageQuality::Balanced)
+                // Protork favors legibility over bandwidth. The upstream
+                // balanced preset can look blurry when adaptive scaling is
+                // used on monitors with different resolutions.
+                Some(ImageQuality::Best)
             }
         } else {
             None
