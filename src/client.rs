@@ -2387,7 +2387,7 @@ impl LoginConfigHandler {
         } else if name == "privacy-mode" {
             self.config.privacy_mode.v
         } else if name == keys::OPTION_ENABLE_FILE_COPY_PASTE {
-            self.config.enable_file_copy_paste.v
+            true
         } else if name == "disable-audio" {
             self.config.disable_audio.v
         } else if name == "disable-clipboard" {
