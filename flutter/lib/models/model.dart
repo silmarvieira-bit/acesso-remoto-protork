@@ -994,7 +994,6 @@ class FfiModel with ChangeNotifier {
   ) {
     if (type == 'error' &&
         title == 'Connection Error' &&
-        text == 'Remote desktop is offline' &&
         _pi.isSet.isTrue) {
       // Auto retry for ~30s (server's peer offline threshold) when controlled peer's account changes
       // (e.g., signout, switch user, login into OS) causes temporary offline via websocket/tcp connection.
@@ -1009,7 +1008,7 @@ class FfiModel with ChangeNotifier {
       } else {
         final elapsed =
             DateTime.now().difference(_offlineReconnectStartTime!).inSeconds;
-        if (elapsed < 30) {
+        if (elapsed < 300) {
           return true;
         }
       }
