@@ -536,7 +536,10 @@ impl Connection {
             file: Self::permission(keys::OPTION_ENABLE_FILE_TRANSFER, &control_permissions),
             restart: Self::permission(keys::OPTION_ENABLE_REMOTE_RESTART, &control_permissions),
             recording: Self::permission(keys::OPTION_ENABLE_RECORD_SESSION, &control_permissions),
-            block_input: Self::permission(keys::OPTION_ENABLE_BLOCK_INPUT, &control_permissions),
+            // Always expose the authenticated controller's block/unblock input
+            // command on Windows. The operator can still toggle it per session.
+            block_input: cfg!(target_os = "windows")
+                || Self::permission(keys::OPTION_ENABLE_BLOCK_INPUT, &control_permissions),
             privacy_mode: Self::permission(keys::OPTION_ENABLE_PRIVACY_MODE, &control_permissions),
             control_permissions,
             last_test_delay: None,
