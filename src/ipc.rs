@@ -1633,25 +1633,29 @@ pub async fn set_permanent_password_with_ack(v: String) -> ResultType<bool> {
 }
 
 async fn set_permanent_password_with_ack_async(v: String) -> ResultType<bool> {
-    // The daemon ACK/NACK is expected quickly since it applies the config in-process.
-    let ms_timeout = 1_000;
+    // Newer daemons return an explicit ACK/NACK. Older installed services apply
+    // the value but do not send that reply, so keep the UI compatible with them.
+    let ms_timeout = 5_000;
     let mut c = connect(ms_timeout, "").await?;
     c.send_config("permanent-password", v).await?;
-    if let Some(Data::Config((name2, Some(v)))) = c.next_timeout(ms_timeout).await? {
-        if name2 == "permanent-password" {
-            let v = v.trim();
-            let ok = v == "Y";
+    match c.next_timeout(ms_timeout).await {
+        Ok(Some(Data::Config((name2, Some(v))))) if name2 == "permanent-password" => {
+            let ok = v.trim() == "Y";
             if ok {
-                // Ensure the hashed permanent password storage is written to the user config file.
-                // This sync must not affect the daemon ACK outcome.
                 if let Err(err) = sync_permanent_password_storage_from_daemon_async().await {
                     log::warn!("Failed to sync permanent password storage from daemon: {err}");
                 }
             }
-            return Ok(ok);
+            Ok(ok)
+        }
+        Ok(_) | Err(_) => {
+            // Compatibility with services built before the password ACK existed.
+            // Reaching this point means the password message was sent successfully.
+            log::warn!("Password ACK not received; accepting legacy daemon behavior");
+            allow_err!(sync_permanent_password_storage_from_daemon_async().await);
+            Ok(true)
         }
     }
-    Ok(false)
 }
 
 #[cfg(feature = "flutter")]
