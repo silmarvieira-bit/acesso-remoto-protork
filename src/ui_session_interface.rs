@@ -243,7 +243,9 @@ impl<T: InvokeUiSession> Session<T> {
     }
 
     pub fn get_view_style(&self) -> String {
-        self.lc.read().unwrap().view_style.clone()
+        // Protork client always fits the remote desktop inside the available
+        // window, including peers that previously saved the original scale.
+        "adaptive".to_owned()
     }
 
     pub fn get_scroll_style(&self) -> String {
