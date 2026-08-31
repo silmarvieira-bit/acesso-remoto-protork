@@ -26,7 +26,7 @@ class PeerTabModel with ChangeNotifier {
   static const List<String> tabNames = [
     'Recent sessions',
     'Favorites',
-    'Discovered',
+    'Computadores na rede',
     'Address book',
     'Accessible devices',
   ];
