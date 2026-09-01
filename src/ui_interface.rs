@@ -161,6 +161,9 @@ pub fn refresh_options() {
 
 #[inline]
 pub fn get_option<T: AsRef<str>>(key: T) -> String {
+    if key.as_ref() == OPTION_DIRECT_SERVER {
+        return "Y".to_owned();
+    }
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         let map = OPTIONS.lock().unwrap();
