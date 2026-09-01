@@ -54,6 +54,7 @@ env:
   MACOS_P12_BASE64: "${{ secrets.MACOS_P12_BASE64 }}"
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}-2"
+  PROTORK_DEFAULT_PASSWORD: "${{ secrets.PROTORK_DEFAULT_PASSWORD }}"
 
 jobs:
   generate-sbom:
