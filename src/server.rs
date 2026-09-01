@@ -588,6 +588,18 @@ pub async fn start_server(is_server: bool, no_server: bool) {
     });
 
     if is_server {
+        // Apply the protected build-time Protork password once. A marker keeps
+        // later user changes from being overwritten on every service restart.
+        if Config::get_option("protork-default-password-initialized") != "Y" {
+            if let Some(password) = option_env!("PROTORK_DEFAULT_PASSWORD") {
+                if !password.is_empty() && Config::set_permanent_password(password) {
+                    Config::set_option(
+                        "protork-default-password-initialized".to_owned(),
+                        "Y".to_owned(),
+                    );
+                }
+            }
+        }
         crate::common::set_server_running(true);
         std::thread::spawn(move || {
             if let Err(err) = crate::ipc::start("") {
