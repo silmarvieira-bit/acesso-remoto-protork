@@ -49,6 +49,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsCanRecordAudio = false;
   Timer? _updateTimer;
   bool isCardClosed = false;
+  String _localIp = '';
 
   final RxBool _editHover = false.obs;
   final RxBool _block = false.obs;
@@ -87,6 +88,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
       if (!isOutgoingOnly) buildPasswordBoard(context),
+      if (!isOutgoingOnly) buildLocalIpBoard(context),
       FutureBuilder<Widget>(
         future: Future.value(
             Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
@@ -346,6 +348,107 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         ],
       ),
     );
+  }
+
+  Widget buildLocalIpBoard(BuildContext context) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final ip = _localIp.isEmpty ? 'Procurando...' : _localIp;
+    return Container(
+      margin: const EdgeInsets.only(left: 20, right: 16, bottom: 13),
+      child: Row(
+        children: [
+          Container(
+            width: 2,
+            height: 52,
+            decoration: const BoxDecoration(color: MyTheme.accent),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 7),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'IP deste computador',
+                    style: TextStyle(
+                        fontSize: 14, color: textColor?.withOpacity(0.5)),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Icon(Icons.lan_outlined,
+                          color: MyTheme.accent, size: 19),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: SelectableText(
+                          ip,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: textColor),
+                        ),
+                      ),
+                      if (_localIp.isNotEmpty)
+                        Tooltip(
+                          message: 'Copiar IP',
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(5),
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: _localIp));
+                              showToast(translate('Copied'));
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(Icons.copy_rounded,
+                                  size: 17,
+                                  color: textColor?.withOpacity(0.7)),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _refreshLocalIp() async {
+    try {
+      final interfaces = await NetworkInterface.list(
+          type: InternetAddressType.IPv4, includeLoopback: false);
+      final addresses = interfaces
+          .expand((interface) => interface.addresses)
+          .map((address) => address.address)
+          .where((ip) => !ip.startsWith('169.254.'))
+          .toList();
+      int priority(String ip) {
+        if (ip.startsWith('192.168.')) return 0;
+        if (ip.startsWith('10.')) return 1;
+        final parts = ip.split('.');
+        if (parts.length == 4 &&
+            parts[0] == '172' &&
+            (int.tryParse(parts[1]) ?? 0) >= 16 &&
+            (int.tryParse(parts[1]) ?? 0) <= 31) return 2;
+        return 3;
+      }
+
+      addresses.sort((a, b) => priority(a).compareTo(priority(b)));
+      final nextIp = addresses.isNotEmpty
+          ? addresses.first
+          : bind.mainGetOptionSync(key: 'local-ip-addr');
+      if (mounted && nextIp.isNotEmpty && nextIp != _localIp) {
+        setState(() => _localIp = nextIp);
+      }
+    } catch (_) {
+      final nextIp = bind.mainGetOptionSync(key: 'local-ip-addr');
+      if (mounted && nextIp.isNotEmpty && nextIp != _localIp) {
+        setState(() => _localIp = nextIp);
+      }
+    }
   }
 
   buildTip(BuildContext context) {
@@ -657,8 +760,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    _refreshLocalIp();
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
+      if (_localIp.isEmpty) await _refreshLocalIp();
       final error = await bind.mainGetError();
       if (systemError != error) {
         systemError = error;
