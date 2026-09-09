@@ -588,6 +588,28 @@ pub async fn start_server(is_server: bool, no_server: bool) {
     });
 
     if is_server {
+        // Point Protork clients to the company's private RustDesk server once.
+        // The marker preserves any deliberate configuration made afterwards.
+        if Config::get_option("protork-private-server-initialized") != "Y" {
+            if let (Some(id_server), Some(relay_server), Some(key)) = (
+                option_env!("PROTORK_ID_SERVER"),
+                option_env!("PROTORK_RELAY_SERVER"),
+                option_env!("PROTORK_SERVER_KEY"),
+            ) {
+                if !id_server.is_empty() && !relay_server.is_empty() && !key.is_empty() {
+                    Config::set_option(
+                        "custom-rendezvous-server".to_owned(),
+                        id_server.to_owned(),
+                    );
+                    Config::set_option("relay-server".to_owned(), relay_server.to_owned());
+                    Config::set_option("key".to_owned(), key.to_owned());
+                    Config::set_option(
+                        "protork-private-server-initialized".to_owned(),
+                        "Y".to_owned(),
+                    );
+                }
+            }
+        }
         // Apply the protected build-time Protork password once. A marker keeps
         // later user changes from being overwritten on every service restart.
         if Config::get_option("protork-default-password-initialized") != "Y" {
