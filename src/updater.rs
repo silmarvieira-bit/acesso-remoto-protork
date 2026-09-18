@@ -184,6 +184,12 @@ fn check_update(manually: bool) -> ResultType<()> {
     if !(manually || config::Config::get_bool_option(config::keys::OPTION_ALLOW_AUTO_UPDATE)) {
         return Ok(());
     }
+    // Protork builds use their own self-hosted update server instead of GitHub
+    // releases; skip the stock RustDesk update path entirely for them.
+    #[cfg(target_os = "windows")]
+    if crate::is_custom_client() {
+        return crate::protork_update::check_update();
+    }
     if do_check_software_update().is_err() {
         // ignore
         return Ok(());
