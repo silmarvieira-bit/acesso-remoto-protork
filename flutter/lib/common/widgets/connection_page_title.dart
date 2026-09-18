@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../common.dart';
+import '../../desktop/widgets/gold_icon_tile.dart';
 
 Widget getConnectionPageTitle(BuildContext context, bool isWeb) {
   return Row(
     children: [
+      const GoldIconTile(icon: Icons.arrow_forward_rounded, size: 26, iconSize: 15)
+          .marginOnly(right: 8),
       Expanded(
           child: Row(
         children: [
