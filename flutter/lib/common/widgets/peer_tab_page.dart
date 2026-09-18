@@ -145,7 +145,7 @@ class _PeerTabPageState extends State<PeerTabPage>
         children: model.visibleEnabledOrderedIndexs.map((t) {
           final selected = model.currentTab == t;
           final color = selected
-              ? MyTheme.tabbar(context).selectedTextColor
+              ? MyTheme.accent
               : MyTheme.tabbar(context).unSelectedTextColor
             ?..withOpacity(0.5);
           final hover = false.obs;
