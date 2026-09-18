@@ -191,10 +191,23 @@ class _PeersViewState extends State<_PeersView>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.sentiment_very_dissatisfied_rounded,
-                  color: Theme.of(context).tabBarTheme.labelColor,
-                  size: 40,
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: MyTheme.accent.withOpacity(0.15),
+                      ),
+                    ),
+                    Icon(
+                      Icons.sentiment_very_dissatisfied_rounded,
+                      color: Theme.of(context).tabBarTheme.labelColor,
+                      size: 40,
+                    ),
+                  ],
                 ).paddingOnly(bottom: 10),
                 Text(
                   translate(
