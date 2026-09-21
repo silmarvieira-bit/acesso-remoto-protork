@@ -1004,6 +1004,22 @@ pub fn get_app_name() -> String {
     "Acesso Remoto Protork".to_owned()
 }
 
+/// A validation-safe variant of [`get_app_name`] for contexts that require an
+/// identifier matching `[a-zA-Z0-9-]+` (no spaces) — currently the Windows
+/// elevated install-handoff path (`platform::windows::validate_install_app_name`,
+/// called from `platform::windows::installer_handoff::run_cmds`). The
+/// display name from `get_app_name()` intentionally keeps its space (window
+/// titles, the URI scheme, log file naming, the default install path all use
+/// it as-is), so this derives a separate, space-free identifier instead of
+/// changing that display name everywhere.
+#[inline]
+pub fn get_install_app_name() -> String {
+    get_app_name()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect()
+}
+
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
