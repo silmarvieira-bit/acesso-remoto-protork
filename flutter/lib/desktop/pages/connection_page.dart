@@ -519,10 +519,19 @@ class _ConnectionPageState extends State<ConnectionPage>
                 SizedBox(
                   height: 28.0,
                   child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(foregroundColor: Colors.black),
                     onPressed: () {
                       onConnect();
                     },
-                    child: Text(translate("Connect")),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.link_rounded, size: 16),
+                        const SizedBox(width: 6),
+                        Text(translate("Connect")),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
