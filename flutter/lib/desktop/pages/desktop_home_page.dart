@@ -11,6 +11,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/desktop/widgets/gold_icon_tile.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
@@ -169,6 +170,59 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                     onHover: (value) => _editHover.value = value,
                   ),
                 ),
+              ),
+            if (!isOutgoingOnly && !isIncomingOnly)
+              Positioned(
+                bottom: 10,
+                left: 16,
+                right: 16,
+                child: Row(
+                  children: [
+                    const GoldIconTile(
+                        icon: Icons.shield_rounded, size: 26, iconSize: 14),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.greenAccent,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Conexão segura',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'Seus dados estão protegidos',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: textColor?.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               )
           ],
         ),
@@ -192,10 +246,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
-          Container(
-            width: 2,
-            decoration: const BoxDecoration(color: MyTheme.accent),
-          ).marginOnly(top: 5),
+          const GoldIconTile(
+                  icon: Icons.desktop_windows_rounded, size: 28, iconSize: 15)
+              .marginOnly(top: 5),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 7),
@@ -295,11 +348,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
-          Container(
-            width: 2,
-            height: 52,
-            decoration: BoxDecoration(color: MyTheme.accent),
-          ),
+          const GoldIconTile(icon: Icons.key_rounded, size: 32, iconSize: 17),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 7),
@@ -321,14 +370,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                             padding: const EdgeInsets.only(top: 10, bottom: 8),
                             child: Row(
                               children: [
-                                Icon(
-                                  Icons.key_rounded,
-                                  color: editHover.value
-                                      ? const Color(0xFF111111)
-                                      : MyTheme.accent,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 7),
                                 Text(
                                   'Criar ou alterar senha de acesso',
                                   maxLines: 1,
@@ -359,11 +400,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       margin: const EdgeInsets.only(left: 20, right: 16, bottom: 13),
       child: Row(
         children: [
-          Container(
-            width: 2,
-            height: 52,
-            decoration: const BoxDecoration(color: MyTheme.accent),
-          ),
+          const GoldIconTile(icon: Icons.lan_outlined, size: 32, iconSize: 16),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 7),
@@ -378,9 +415,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      Icon(Icons.lan_outlined,
-                          color: MyTheme.accent, size: 19),
-                      const SizedBox(width: 7),
                       Expanded(
                         child: SelectableText(
                           ip,
