@@ -324,8 +324,8 @@ class ToolbarState {
 }
 
 class _ToolbarTheme {
-  static const Color blueColor = MyTheme.button;
-  static const Color hoverBlueColor = MyTheme.accent;
+  static const Color blueColor = protorkYellow;
+  static const Color hoverBlueColor = protorkYellowHover;
   static Color inactiveColor = Colors.grey[800]!;
   static Color hoverInactiveColor = Colors.grey[850]!;
 
@@ -3396,7 +3396,7 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
         child: Icon(
           widget.isHorizontal ? Icons.drag_indicator : Icons.drag_handle,
           size: 20,
-          color: MyTheme.color(context).drag_indicator,
+          color: _ToolbarTheme.protorkYellow,
         ),
         feedback: widget,
         onDragStarted: () {
@@ -3466,6 +3466,7 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
                       ? Icons.fullscreen_exit
                       : Icons.fullscreen,
                   size: iconSize,
+                  color: _ToolbarTheme.protorkYellow,
                 ),
               ),
             )),
@@ -3479,6 +3480,7 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
                     child: Icon(
                       Icons.remove,
                       size: iconSize,
+                      color: _ToolbarTheme.protorkYellow,
                     ),
                   ),
                 ),
@@ -3493,6 +3495,7 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
                 child: Icon(
                   _toolbarCollapseIcon(widget.edge.value, collapse.isTrue),
                   size: iconSize,
+                  color: _ToolbarTheme.protorkYellow,
                 ),
               ))),
         ),
