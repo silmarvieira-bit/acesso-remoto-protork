@@ -629,6 +629,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                                     (
                                       '${translate('Terminal')} (beta)',
                                       () => onConnect(isTerminal: true)
+                                    ),
                                   ]
                                       .map((e) => MenuEntryButton<String>(
                                             childBuilder: (TextStyle? style) =>
@@ -646,7 +647,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                                           context,
                                           const MenuConfig(
                                               commonColor: CustomPopupMenuTheme
-                                      .commonColor,
+                                                  .commonColor,
                                               height:
                                                   CustomPopupMenuTheme.height,
                                               dividerHeight:
@@ -655,8 +656,8 @@ class _ConnectionPageState extends State<ConnectionPage>
                                       .expand((i) => i)
                                       .toList(),
                                   elevation: 8,
-                               )
-                                  .then((_) {
+                                )
+                                    .then((_) {
                                   _menuOpen.value = false;
                                 });
                               },
