@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/widgets/connection_page_title.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/widgets/gold_icon_tile.dart';
 import 'package:flutter_hbb/desktop/widgets/popup_menu.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:get/get.dart';
@@ -317,11 +318,45 @@ class _ConnectionPageState extends State<ConnectionPage>
             SizedBox(height: 12),
             Divider().paddingOnly(right: 12),
             Expanded(child: PeerTabPage()),
+            _buildQuickTipCard(context)
+                .marginOnly(right: 12, top: 8, bottom: 4),
           ],
         ).paddingOnly(left: 12.0)),
         if (!isOutgoingOnly) const Divider(height: 1),
         if (!isOutgoingOnly) OnlineStatusWidget()
       ],
+    );
+  }
+
+  /// Small hint card shown under the peer list, matching the ProtorK
+  /// Acesso reference design.
+  Widget _buildQuickTipCard(BuildContext context) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141417),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF232328)),
+      ),
+      child: Row(
+        children: [
+          const GoldIconTile(
+              icon: Icons.lightbulb_outline_rounded, size: 26, iconSize: 14),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Para uma conexão mais rápida, por favor configure seu próprio computador.',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  TextStyle(fontSize: 12, color: textColor?.withOpacity(0.8)),
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded,
+              size: 18, color: textColor?.withOpacity(0.5)),
+        ],
+      ),
     );
   }
 
@@ -346,7 +381,7 @@ class _ConnectionPageState extends State<ConnectionPage>
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(color: Theme.of(context).colorScheme.background)),
+          border: Border.all(color: const Color(0xFF232328))),
       child: Ink(
         child: Column(
           children: [
@@ -412,7 +447,12 @@ class _ConnectionPageState extends State<ConnectionPage>
                   ) {
                     updateTextAndPreserveSelection(
                         fieldTextEditingController, _idController.text);
-                    return Obx(() => TextField(
+                    return Obx(() => Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF232328)),
+                        ),
+                        child: TextField(
                           autocorrect: false,
                           enableSuggestions: false,
                           keyboardType: TextInputType.visiblePassword,
@@ -427,12 +467,25 @@ class _ConnectionPageState extends State<ConnectionPage>
                               Theme.of(context).textTheme.titleLarge?.color,
                           decoration: InputDecoration(
                               filled: false,
+                              border: InputBorder.none,
                               counterText: '',
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: Icon(Icons.person_outline_rounded,
+                                    size: 20,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.color
+                                        ?.withOpacity(0.5)),
+                              ),
+                              prefixIconConstraints:
+                                  const BoxConstraints(minWidth: 36, minHeight: 20),
                               hintText: _idInputFocused.value
                                   ? null
                                   : translate('Enter Remote ID'),
                               contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 15, vertical: 13)),
+                                  horizontal: 12, vertical: 13)),
                           controller: fieldTextEditingController,
                           inputFormatters: [IDTextInputFormatter()],
                           onChanged: (v) {
@@ -441,7 +494,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                           onSubmitted: (_) {
                             onConnect();
                           },
-                        ).workaroundFreezeLinuxMint());
+                        ).workaroundFreezeLinuxMint()));
                   },
                   onSelected: (option) {
                     setState(() {
@@ -576,7 +629,6 @@ class _ConnectionPageState extends State<ConnectionPage>
                                     (
                                       '${translate('Terminal')} (beta)',
                                       () => onConnect(isTerminal: true)
-                                    ),
                                   ]
                                       .map((e) => MenuEntryButton<String>(
                                             childBuilder: (TextStyle? style) =>
@@ -594,7 +646,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                                           context,
                                           const MenuConfig(
                                               commonColor: CustomPopupMenuTheme
-                                                  .commonColor,
+                                      .commonColor,
                                               height:
                                                   CustomPopupMenuTheme.height,
                                               dividerHeight:
@@ -603,8 +655,8 @@ class _ConnectionPageState extends State<ConnectionPage>
                                       .expand((i) => i)
                                       .toList(),
                                   elevation: 8,
-                                )
-                                    .then((_) {
+                               )
+                                  .then((_) {
                                   _menuOpen.value = false;
                                 });
                               },
