@@ -195,27 +195,44 @@ class _PeersViewState extends State<_PeersView>
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      width: 64,
-                      height: 64,
+                      width: 96,
+                      height: 96,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: MyTheme.accent.withOpacity(0.15),
                       ),
                     ),
                     Icon(
-                      Icons.sentiment_very_dissatisfied_rounded,
-                      color: Theme.of(context).tabBarTheme.labelColor,
-                      size: 40,
+                      Icons.desktop_windows_rounded,
+                      color: MyTheme.accent,
+                      size: 42,
+                    ),
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: MyTheme.accent,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.priority_high_rounded,
+                            color: Colors.black, size: 14),
+                      ),
                     ),
                   ],
-                ).paddingOnly(bottom: 10),
+                ).paddingOnly(bottom: 14),
                 Text(
                   translate(
                     _emptyMessages[widget.peers.loadEvent] ?? 'Empty',
                   ),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Theme.of(context).tabBarTheme.labelColor,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
