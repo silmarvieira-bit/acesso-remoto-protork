@@ -388,23 +388,23 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       borderRadius: BorderRadius.circular(6),
                       onTap: setPasswordDialog,
                       onHover: (value) => editHover.value = value,
-                      child: Obx(() => Padding(
-                            padding: const EdgeInsets.only(top: 10, bottom: 8),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Criar ou alterar senha de acesso',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: textColor,
-                                  ),
-                                ),
-                              ],
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10, bottom: 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Criar ou alterar senha de acesso',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: textColor,
+                              ),
                             ),
-                          )),
+                          ],
+                        ),
+                      ),
                     ),
                 ],
               ),
