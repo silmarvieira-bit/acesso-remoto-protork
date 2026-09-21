@@ -856,13 +856,23 @@ class _PeerViewDropdownState extends State<PeerViewDropdown> {
     return _hoverAction(
         context: context,
         toolTip: translate('Change view'),
-        child: Icon(
-          peerCardUiType.value == PeerUiType.grid
-              ? Icons.grid_view_rounded
-              : peerCardUiType.value == PeerUiType.list
-                  ? Icons.view_list_rounded
-                  : Icons.view_agenda_rounded,
-          size: 18,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: MyTheme.accent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            peerCardUiType.value == PeerUiType.grid
+                ? Icons.grid_view_rounded
+                : peerCardUiType.value == PeerUiType.list
+                    ? Icons.view_list_rounded
+                    : Icons.view_agenda_rounded,
+            size: 14,
+            color: Colors.black,
+          ),
         ),
         onTapDown: (details) {
           final x = details.globalPosition.dx;
