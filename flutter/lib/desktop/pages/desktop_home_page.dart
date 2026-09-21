@@ -109,6 +109,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         },
       ),
       buildPluginEntry(),
+      // Reserve room for the security-footer card below, which is drawn as a
+      // fixed Positioned overlay at the bottom of the Stack (not part of this
+      // scrollable flow). Without this, taller scrollable content (e.g. the
+      // "outdated version" update card) ends up rendered underneath/behind
+      // that footer instead of stopping above it.
+      if (!isOutgoingOnly && !isIncomingOnly) const SizedBox(height: 70),
     ];
     if (isIncomingOnly) {
       children.addAll([
