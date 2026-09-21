@@ -174,9 +174,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             if (!isOutgoingOnly && !isIncomingOnly)
               Positioned(
                 bottom: 10,
-                left: 16,
-                right: 16,
-                child: Row(
+                left: 12,
+                right: 12,
+                child: _sidebarCard(
+                  margin: EdgeInsets.zero,
+                  child: Row(
                   children: [
                     const GoldIconTile(
                         icon: Icons.shield_rounded, size: 26, iconSize: 14),
@@ -222,6 +224,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       ),
                     ),
                   ],
+                  ),
                 ),
               )
           ],
@@ -237,17 +240,36 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
+  /// Bordered "card" wrapper used for the left-pane rows (ID, password,
+  /// local IP, security footer) to match the ProtorK Acesso reference
+  /// design: each row sits inside its own rounded, subtly-bordered box,
+  /// with a gold border for the row that most needs the user's attention.
+  Widget _sidebarCard(
+      {required Widget child, bool highlight = false, EdgeInsetsGeometry? margin}) {
+    return Container(
+      margin: margin ?? const EdgeInsets.fromLTRB(12, 5, 12, 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141417),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: highlight ? borderColor : const Color(0xFF232328),
+          width: highlight ? 1.4 : 1,
+        ),
+      ),
+      child: child,
+    );
+  }
+
   buildIDBoard(BuildContext context) {
     final model = gFFI.serverModel;
-    return Container(
-      margin: const EdgeInsets.only(left: 20, right: 11),
-      height: 57,
+    return _sidebarCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
           const GoldIconTile(
-                  icon: Icons.desktop_windows_rounded, size: 28, iconSize: 15)
+                  icon: Icons.person_rounded, size: 28, iconSize: 15)
               .marginOnly(top: 5),
           Expanded(
             child: Padding(
@@ -342,8 +364,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   buildPasswordBoard2(BuildContext context, ServerModel model) {
     RxBool editHover = false.obs;
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
-    return Container(
-      margin: EdgeInsets.only(left: 20.0, right: 16, top: 13, bottom: 13),
+    return _sidebarCard(
+      highlight: true,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
@@ -396,8 +418,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget buildLocalIpBoard(BuildContext context) {
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
     final ip = _localIp.isEmpty ? 'Procurando...' : _localIp;
-    return Container(
-      margin: const EdgeInsets.only(left: 20, right: 16, bottom: 13),
+    return _sidebarCard(
       child: Row(
         children: [
           const GoldIconTile(icon: Icons.lan_outlined, size: 32, iconSize: 16),
@@ -492,7 +513,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     final isOutgoingOnly = bind.isOutgoingOnly();
     return Padding(
       padding:
-          const EdgeInsets.only(left: 20.0, right: 16, top: 16.0, bottom: 5),
+          const EdgeInsets.only(left: 12.0, right: 12, top: 16.0, bottom: 5),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,9 +523,19 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               if (!isOutgoingOnly)
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    translate("Your Desktop"),
-                    style: Theme.of(context).textTheme.titleLarge,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const GoldIconTile(
+                          icon: Icons.desktop_windows_rounded,
+                          size: 26,
+                          iconSize: 14),
+                      const SizedBox(width: 8),
+                      Text(
+                        translate("Your Desktop"),
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
                   ),
                 ),
             ],
