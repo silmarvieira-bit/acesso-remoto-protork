@@ -8,19 +8,19 @@ import '../../desktop/widgets/gold_icon_tile.dart';
 Widget getConnectionPageTitle(BuildContext context, bool isWeb) {
   return Row(
     children: [
-      const GoldIconTile(icon: Icons.arrow_forward_rounded, size: 26, iconSize: 15)
+      const GoldIconTile(icon: Icons.desktop_windows_outlined, size: 34, iconSize: 22)
           .marginOnly(right: 8),
       Expanded(
           child: Row(
         children: [
-          AutoSizeText(
+          Expanded(child: AutoSizeText(
             translate('Control Remote Desktop'),
             maxLines: 1,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
                 ?.merge(TextStyle(height: 1)),
-          ).marginOnly(right: 4),
+          ).marginOnly(right: 4)),
           Tooltip(
             waitDuration: Duration(milliseconds: 300),
             message: translate(isWeb ? "web_id_input_tip" : "id_input_tip"),
