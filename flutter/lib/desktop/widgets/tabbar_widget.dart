@@ -636,14 +636,19 @@ class _DesktopTabState extends State<DesktopTab>
                       child: Row(children: [
                         Offstage(
                           offstage: !showLogo,
-                          child: loadIcon(16),
+                          child: loadIcon(24),
                         ),
                         Offstage(
                             offstage: !showTitle,
-                            child: const Text(
-                              "ProtorK Acesso",
-                              style: TextStyle(fontSize: 13),
-                            ).marginOnly(left: 2))
+                            child: const Text.rich(
+                              TextSpan(children: [
+                                TextSpan(text: "ProtorK ",
+                                    style: TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(text: "Acesso",
+                                    style: TextStyle(color: MyTheme.accent)),
+                              ]),
+                              style: TextStyle(fontSize: 16),
+                            ).marginOnly(left: 6))
                       ]).marginOnly(
                         left: 5,
                         right: 10,

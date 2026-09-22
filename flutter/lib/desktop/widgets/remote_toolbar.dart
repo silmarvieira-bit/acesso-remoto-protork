@@ -324,8 +324,8 @@ class ToolbarState {
 }
 
 class _ToolbarTheme {
-  static const Color blueColor = protorkYellow;
-  static const Color hoverBlueColor = protorkYellowHover;
+  static const Color blueColor = Color(0xFF0877DB);
+  static const Color hoverBlueColor = Color(0xFF159CFF);
   static Color inactiveColor = Colors.grey[800]!;
   static Color hoverInactiveColor = Colors.grey[850]!;
 
@@ -339,11 +339,28 @@ class _ToolbarTheme {
   static const double height = 20.0;
   static const double dividerHeight = 12.0;
 
-  static const double buttonSize = 32;
-  static const double buttonHMargin = 2;
-  static const double buttonVMargin = 6;
-  static const double iconRadius = 8;
-  static const double elevation = 3;
+  static const double buttonSize = 44;
+  static const double buttonHMargin = 4;
+  static const double buttonVMargin = 8;
+  static const double iconRadius = 12;
+  static const double elevation = 8;
+
+  static BoxDecoration buttonDecoration(Color color) => BoxDecoration(
+        borderRadius: BorderRadius.circular(iconRadius),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.lerp(color, Colors.white, 0.18)!,
+            color,
+            Color.lerp(color, Colors.black, 0.25)!,
+          ],
+        ),
+        border: Border.all(color: Colors.white.withOpacity(0.25)),
+        boxShadow: const [
+          BoxShadow(color: Colors.black54, offset: Offset(0, 3), blurRadius: 4),
+        ],
+      );
 
   static double dividerSpaceToAction = isWindows ? 8 : 14;
 
@@ -379,6 +396,11 @@ class _ToolbarTheme {
       BuildContext context, Widget child, BorderRadius borderRadius) {
     return Container(
       decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF263C50), Color(0xFF0A1420)],
+        ),
         border: Border.all(
           color: borderColor(context),
           width: 1,
@@ -859,7 +881,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
     }
     if (!isWeb) toolbarItems.add(_RecordMenu());
     toolbarItems.add(_CloseMenu(id: widget.id, ffi: widget.ffi));
-    final toolbarBorderRadius = BorderRadius.all(Radius.circular(4.0));
+    final toolbarBorderRadius = BorderRadius.all(Radius.circular(18.0));
     // innerAxis: how the toolbar icons themselves flow.
     // outerAxis: how the toolbar block and the handle stack against each other
     // (perpendicular to the dock edge, so the handle hangs off the interior face).
@@ -934,7 +956,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
         shape: MaterialStatePropertyAll(BeveledRectangleBorder()),
       ).copyWith(
               backgroundColor:
-                  Theme.of(context).menuBarTheme.style?.backgroundColor)),
+                  const MaterialStatePropertyAll(Colors.transparent))),
     );
   }
 }
@@ -978,10 +1000,10 @@ class _BlockInputMenu extends StatelessWidget {
             : 'Bloquear mouse e teclado',
         color: state.value
             ? _ToolbarTheme.redColor
-            : _ToolbarTheme.protorkYellow,
+            : const Color(0xFFE97B00),
         hoverColor: state.value
             ? _ToolbarTheme.hoverRedColor
-            : _ToolbarTheme.protorkYellowHover,
+            : const Color(0xFFFFA329),
         onPressed: () {
           bind.sessionToggleOption(
             sessionId: ffi.sessionId,
@@ -1018,8 +1040,8 @@ class _CopyFileMenu extends StatelessWidget {
   Widget build(BuildContext context) => _IconMenuButton(
         icon: const Icon(Icons.copy, color: Colors.white, size: 21),
         tooltip: 'Copiar arquivo selecionado (Ctrl+C)',
-        color: _ToolbarTheme.fileGreen,
-        hoverColor: _ToolbarTheme.fileGreenHover,
+        color: const Color(0xFF009FCB),
+        hoverColor: const Color(0xFF13C9F5),
         onPressed: () => _sendRemoteClipboardShortcut(ffi, 'VK_C'),
       );
 }
@@ -1032,8 +1054,8 @@ class _PasteFileMenu extends StatelessWidget {
   Widget build(BuildContext context) => _IconMenuButton(
         icon: const Icon(Icons.content_paste, color: Colors.white, size: 21),
         tooltip: 'Colar arquivo (Ctrl+V)',
-        color: _ToolbarTheme.fileGreen,
-        hoverColor: _ToolbarTheme.fileGreenHover,
+        color: _ToolbarTheme.blueColor,
+        hoverColor: _ToolbarTheme.hoverBlueColor,
         onPressed: () => _sendRemoteClipboardShortcut(ffi, 'VK_V'),
       );
 }
@@ -2442,8 +2464,8 @@ class _KeyboardMenu extends StatelessWidget {
         tooltip: 'Keyboard Settings',
         svg: "assets/keyboard_mouse.svg",
         ffi: ffi,
-        color: _ToolbarTheme.blueColor,
-        hoverColor: _ToolbarTheme.hoverBlueColor,
+        color: const Color(0xFF7134D8),
+        hoverColor: const Color(0xFF965AFF),
         menuChildrenGetter: (_) => [
               keyboardMode(),
               localKeyboardType(),
@@ -2709,8 +2731,8 @@ class _ChatMenuState extends State<_ChatMenu> {
           key: chatButtonKey,
           svg: 'assets/chat.svg',
           ffi: widget.ffi,
-          color: _ToolbarTheme.blueColor,
-          hoverColor: _ToolbarTheme.hoverBlueColor,
+          color: const Color(0xFF00A858),
+          hoverColor: const Color(0xFF17D575),
           menuChildrenGetter: (_) => [textChat(), voiceCall()]);
     }
   }
@@ -2721,8 +2743,8 @@ class _ChatMenuState extends State<_ChatMenu> {
       tooltip: 'Text chat',
       key: chatButtonKey,
       onPressed: _textChatOnPressed,
-      color: _ToolbarTheme.blueColor,
-      hoverColor: _ToolbarTheme.hoverBlueColor,
+      color: const Color(0xFF00A858),
+      hoverColor: const Color(0xFF17D575),
     );
   }
 
@@ -2856,10 +2878,10 @@ class _RecordMenu extends StatelessWidget {
       onPressed: () => recordingModel.toggle(),
       color: recordingModel.start
           ? _ToolbarTheme.redColor
-          : _ToolbarTheme.blueColor,
+          : const Color(0xFFC90050),
       hoverColor: recordingModel.start
           ? _ToolbarTheme.hoverRedColor
-          : _ToolbarTheme.hoverBlueColor,
+          : const Color(0xFFF02376),
     );
   }
 }
@@ -2881,7 +2903,7 @@ class _CloseMenu extends StatelessWidget {
         }
         closeConnection(id: id);
       },
-      color: _ToolbarTheme.redColor,
+      color: const Color(0xFF30465B),
       hoverColor: _ToolbarTheme.hoverRedColor,
     );
   }
@@ -2946,12 +2968,14 @@ class _IconMenuButtonState extends State<_IconMenuButton> {
             child: Material(
                 type: MaterialType.transparency,
                 child: Ink(
-                    decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.circular(_ToolbarTheme.iconRadius),
-                      color: hover ? widget.hoverColor : widget.color,
-                    ),
-                    child: icon)),
+                    decoration: _ToolbarTheme.buttonDecoration(
+                        hover ? widget.hoverColor : widget.color),
+                    child: SizedBox.expand(
+                      child: Padding(
+                        padding: const EdgeInsets.all(7),
+                        child: Center(child: icon),
+                      ),
+                    ))),
           )),
     ).marginSymmetric(
         horizontal: widget.hMargin ?? _ToolbarTheme.buttonHMargin,
@@ -3029,12 +3053,14 @@ class _IconSubmenuButtonState extends State<_IconSubmenuButton> {
                 child: Material(
                     type: MaterialType.transparency,
                     child: Ink(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.circular(_ToolbarTheme.iconRadius),
-                          color: hover ? widget.hoverColor : widget.color,
-                        ),
-                        child: icon))),
+                        decoration: _ToolbarTheme.buttonDecoration(
+                            hover ? widget.hoverColor : widget.color),
+                        child: SizedBox.expand(
+                          child: Padding(
+                            padding: const EdgeInsets.all(7),
+                            child: Center(child: icon),
+                          ),
+                        )))),
             menuChildren: widget
                 .menuChildrenGetter(this)
                 .map((e) => _buildPointerTrackWidget(e, widget.ffi))
