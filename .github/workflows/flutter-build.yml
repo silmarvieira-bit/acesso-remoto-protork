@@ -61,9 +61,9 @@ env:
   # Self-hosted update server (see src/protork_update.rs). PROTORK_UPDATE_SEQUENCE
   # must be the exact SEQUENCE passed to `publish.mjs publish` when this build's
   # MSI is published, or clients will never see it as newer.
-  PROTORK_UPDATE_SERVER: "http://192.168.5.85:8788"
-  PROTORK_UPDATE_PUBLIC_KEY: "C4opgaQQbhXyvNgn0OHlgc64eLJ7bokOagRCEHVmpWc="
-  PROTORK_UPDATE_SEQUENCE: "${{ github.run_number }}"
+  PROTORK_UPDATE_URL: "http://192.168.1.95:8788/updates/"
+  PROTORK_UPDATE_PUBLIC_KEY: "V/vA2KilP/HMDFVVru3mzQU5sXoi5A+u4NdzmX2+Ewc="
+  PROTORK_UPDATE_SEQUENCE: "${{ github.run_id }}"
 
 jobs:
   generate-sbom:
