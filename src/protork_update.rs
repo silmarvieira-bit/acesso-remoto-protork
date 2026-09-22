@@ -1,33 +1,17 @@
-// Custom auto-update channel for the Protork build.
-//
-// The stock RustDesk updater (src/updater.rs) only ever checks
-// github.com/rustdesk/rustdesk releases, which is not where Protork builds are
-// published. This module checks our own self-hosted update server instead and
-// installs the new MSI silently once it has been verified.
-//
-// Server-side contract (see the release admin's `publish.mjs` / `server.mjs`,
-// not part of this repository):
-//   GET {PROTORK_UPDATE_SERVER}/updates/latest-<arch>.signed
-//     -> bytes = combined Ed25519 signature (64 bytes) || JSON payload
-//        payload = {"product","arch","sequence","expires","size","sha256"}
-//   GET {PROTORK_UPDATE_SERVER}/updates/protork-<sequence>-<arch>.msi
-//     -> the raw MSI package described by the manifest above
-//
-// Build-time configuration (baked in via `option_env!`, same pattern as
-// PROTORK_ID_SERVER / PROTORK_SERVER_KEY in src/server.rs):
-//   PROTORK_UPDATE_SERVER      base URL, e.g. "http://192.168.1.95:8788" (no trailing slash)
-//   PROTORK_UPDATE_PUBLIC_KEY  base64 raw 32-byte Ed25519 public key (`publish.mjs public-key`)
-//   PROTORK_UPDATE_SEQUENCE    this build's own release sequence number; must match the
-//                              SEQUENCE this exact build is published under via `publish.mjs publish`
-//
-// A build missing PROTORK_UPDATE_SERVER (e.g. a plain debug build) silently
-// skips the check rather than failing.
-
-use hbb_common::{bail, log, sodiumoxide::crypto::sign, ResultType};
+//! Signed, self-hosted MSI updates. Configuration is pinned at build time.
+use hbb_common::{bail, log, ResultType};
+use hbb_common::base64::{engine::general_purpose::STANDARD, Engine as _};
+use hbb_common::sodiumoxide::crypto::sign;
 use serde_derive::Deserialize;
-use std::time::{SystemTime, UNIX_EPOCH};
+use sha2::{Digest, Sha256};
+use std::{fs::OpenOptions, io::{Read, Write}, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::os::windows::{fs::{MetadataExt, OpenOptionsExt}, process::CommandExt};
+
+const MAX_MSI: u64 = 512 * 1024 * 1024;
+const MAX_MANIFEST: u64 = 32 * 1024;
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Manifest {
     product: String,
     arch: String,
@@ -37,122 +21,143 @@ struct Manifest {
     sha256: String,
 }
 
-fn server_base() -> Option<&'static str> {
-    option_env!("PROTORK_UPDATE_SERVER")
+fn decode_manifest(signed: &[u8], key: &str, now: u64, current: u64, arch: &str) -> ResultType<Manifest> {
+    let raw_key = STANDARD.decode(key)?;
+    let pk = match sign::PublicKey::from_slice(&raw_key) {
+        Some(pk) => pk,
+        None => bail!("Invalid Protork update public key"),
+    };
+    let payload = match sign::verify(signed, &pk) {
+        Ok(payload) => payload,
+        Err(_) => bail!("Invalid Protork update signature"),
+    };
+    let m: Manifest = serde_json::from_slice(&payload)?;
+    if m.product != "Acesso Remoto Protork" || m.arch != arch {
+        bail!("Wrong update product or architecture");
+    }
+    if m.sequence < current || m.expires <= now || m.size == 0 || m.size > MAX_MSI {
+        bail!("Update is old, expired or has invalid size");
+    }
+    if m.sha256.len() != 64 || !m.sha256.bytes().all(|b| b.is_ascii_hexdigit()) {
+        bail!("Invalid update hash");
+    }
+    Ok(m)
 }
 
-fn public_key() -> ResultType<sign::PublicKey> {
-    let Some(encoded) = option_env!("PROTORK_UPDATE_PUBLIC_KEY") else {
-        bail!("PROTORK_UPDATE_PUBLIC_KEY is not set in this build");
-    };
-    let raw = crate::decode64(encoded)?;
-    let raw: [u8; 32] = raw
-        .try_into()
-        .map_err(|_| hbb_common::anyhow::anyhow!("PROTORK_UPDATE_PUBLIC_KEY must be 32 bytes"))?;
-    Ok(sign::PublicKey(raw))
-}
-
-fn current_sequence() -> u64 {
-    option_env!("PROTORK_UPDATE_SEQUENCE")
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(0)
-}
-
-fn now_secs() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0)
-}
-
-/// Checks the Protork update server for a newer signed release and installs
-/// it silently via `msiexec` when one is found. No-op when this build was not
-/// configured with an update server.
-pub fn check_update() -> ResultType<()> {
-    let Some(base) = server_base() else {
-        return Ok(());
-    };
-    let pk = public_key()?;
-    let Some(arch) = crate::platform::windows::release_arch_suffix() else {
-        bail!("Unsupported architecture for Protork update");
-    };
-
-    let manifest_url = format!("{}/updates/latest-{}.signed", base, arch);
-    let client = crate::hbbs_http::create_http_client_with_url(&manifest_url);
-    let resp = client.get(&manifest_url).send()?;
-    if !resp.status().is_success() {
-        bail!("Failed to fetch update manifest: {}", resp.status());
-    }
-    let signed = resp.bytes()?.to_vec();
-    let Ok(payload) = sign::verify(&signed, &pk) else {
-        bail!("Update manifest signature verification failed");
-    };
-    let manifest: Manifest = serde_json::from_slice(&payload)?;
-
-    if manifest.product != crate::get_app_name() {
-        bail!(
-            "Update manifest is for a different product: {}",
-            manifest.product
-        );
-    }
-    if manifest.arch != arch {
-        bail!("Update manifest architecture mismatch: {}", manifest.arch);
-    }
-    if manifest.expires <= now_secs() {
-        bail!("Update manifest has expired");
-    }
-    if manifest.sequence <= current_sequence() {
-        log::debug!(
-            "Protork update: already on sequence {} (server has {})",
-            current_sequence(),
-            manifest.sequence
-        );
+pub(super) fn check_update() -> ResultType<()> {
+    let base = option_env!("PROTORK_UPDATE_URL").unwrap_or("");
+    let key = option_env!("PROTORK_UPDATE_PUBLIC_KEY").unwrap_or("");
+    if base.is_empty() || key.is_empty() {
+        log::info!("Protork automatic updates are not provisioned");
         return Ok(());
     }
-    if manifest.size == 0 || manifest.size > 512 * 1024 * 1024 {
-        bail!("Update manifest reports an invalid package size");
+    if !crate::platform::is_root() || !crate::platform::is_msi_installed()? {
+        bail!("Protork updater requires an installed MSI and privileged server process");
     }
     if !crate::updater::has_no_active_conns() {
-        // Retried on the next scheduled check, same as the stock updater.
-        bail!("Skipping update while a session is active");
+        return Ok(());
     }
+    let current: u64 = option_env!("PROTORK_UPDATE_SEQUENCE").unwrap_or("0").parse()?;
+    if current == 0 {
+        bail!("Protork build has no update sequence");
+    }
+    let arch = match crate::platform::windows::release_arch_suffix() {
+        Some(arch) => arch,
+        None => bail!("Unsupported update architecture"),
+    };
+    let base_url = url::Url::parse(base)?;
+    // HTTP is restricted to the known LAN server; signatures authenticate both
+    // manifest metadata and MSI hash. Public hosts require HTTPS.
+    if !(base_url.scheme() == "https"
+        || (base_url.scheme() == "http" && base_url.host_str() == Some("192.168.1.95")))
+        || !base_url.username().is_empty() || base_url.password().is_some()
+        || base_url.query().is_some() || base_url.fragment().is_some()
+        || !base.ends_with('/')
+    {
+        bail!("Invalid Protork update endpoint");
+    }
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(180))
+        .redirect(reqwest::redirect::Policy::none()).build()?;
+    let response = client.get(base_url.join(&format!("latest-{arch}.signed"))?).send()?;
+    if response.status() == reqwest::StatusCode::NOT_FOUND {
+        return Ok(());
+    }
+    let mut signed = Vec::new();
+    response.error_for_status()?.take(MAX_MANIFEST + 1).read_to_end(&mut signed)?;
+    if signed.len() as u64 > MAX_MANIFEST { bail!("Oversized update manifest"); }
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+    let m = decode_manifest(&signed, key, now, current, arch)?;
+    if m.sequence == current { return Ok(()); }
 
-    let package_url = format!(
-        "{}/updates/protork-{}-{}.msi",
-        base, manifest.sequence, arch
-    );
-    let client = crate::hbbs_http::create_http_client_with_url(&package_url);
-    let resp = client.get(&package_url).send()?;
-    if !resp.status().is_success() {
-        bail!("Failed to download update package: {}", resp.status());
+    // Staging is under Program Files, not a shared writable temporary folder.
+    let exe = std::env::current_exe()?;
+    let parent = match exe.parent() { Some(p) => p, None => bail!("Missing install directory") };
+    let program_files = std::path::PathBuf::from(std::env::var("ProgramFiles")?);
+    if !parent.starts_with(&program_files) { bail!("Install must be under Program Files"); }
+    let stage = parent.join("protork-updates");
+    std::fs::create_dir_all(&stage)?;
+    for ancestor in stage.ancestors() {
+        if std::fs::symlink_metadata(ancestor)?.file_attributes() & 0x400 != 0 {
+            bail!("Reparse point in update staging path");
+        }
     }
-    let bytes = resp.bytes()?.to_vec();
-    if bytes.len() as u64 != manifest.size {
-        bail!("Downloaded package size does not match the manifest");
+    let icacls = std::path::PathBuf::from(std::env::var("SystemRoot")?).join("System32/icacls.exe");
+    let status = std::process::Command::new(icacls).arg(&stage)
+        .args(["/inheritance:r", "/grant:r", "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F"])
+        .creation_flags(0x08000000).status()?;
+    if !status.success() { bail!("Cannot protect update staging directory"); }
+    let _lock = OpenOptions::new().read(true).write(true).create(true)
+        .share_mode(0).open(stage.join("update.lock"))?;
+    let filename = format!("protork-{}-{}.msi", m.sequence, m.arch);
+    let path = stage.join(&filename);
+    // Retry interrupted downloads only inside the protected staging directory.
+    if path.exists() && std::fs::symlink_metadata(&path)?.file_attributes() & 0x400 != 0 {
+        bail!("Reparse point in update package path");
     }
-    use hbb_common::sha2::{Digest, Sha256};
-    let digest = format!("{:x}", Sha256::digest(&bytes));
-    if digest != manifest.sha256 {
-        bail!("Downloaded package hash does not match the manifest");
+    let mut file = OpenOptions::new().read(true).write(true).create(true).truncate(true)
+        .share_mode(1).open(&path)?;
+    let mut body = client.get(base_url.join(&filename)?).send()?.error_for_status()?.take(m.size + 1);
+    let mut hasher = Sha256::new();
+    let mut count = 0u64;
+    let mut buf = [0u8; 65536];
+    loop {
+        let n = body.read(&mut buf)?;
+        if n == 0 { break; }
+        count += n as u64;
+        if count > m.size { bail!("Update exceeds signed size"); }
+        hasher.update(&buf[..n]);
+        file.write_all(&buf[..n])?;
     }
+    file.sync_all()?;
+    if count != m.size || format!("{:x}", hasher.finalize()) != m.sha256.to_lowercase() {
+        bail!("Update checksum mismatch");
+    }
+    if !crate::updater::has_no_active_conns() { return Ok(()); }
+    // MSI opens the database read-only. Release our write handle first, then
+    // retain a read-only non-delete-sharing handle through the install handoff.
+    drop(file);
+    let _verified_package = OpenOptions::new().read(true).share_mode(1).open(&path)?;
+    log::info!("Installing signed Protork update sequence {}", m.sequence);
+    crate::platform::update_me_msi(&path.to_string_lossy(), true)
+}
 
-    let temp_path =
-        std::env::temp_dir().join(format!("protork-update-{}.msi", manifest.sequence));
-    std::fs::write(&temp_path, &bytes)?;
-    // Re-check right before install: the download can take a while.
-    if !crate::updater::has_no_active_conns() {
-        std::fs::remove_file(&temp_path).ok();
-        bail!("Skipping install: a session started during download");
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn signature_and_release_constraints() {
+        let (pk, sk) = sign::gen_keypair();
+        let key = STANDARD.encode(pk.0);
+        let payload = serde_json::json!({"product":"Acesso Remoto Protork", "arch":"x86_64",
+            "sequence":2,"expires":100,"size":20,"sha256":"a".repeat(64)}).to_string();
+        let mut signed = sign::sign(payload.as_bytes(), &sk);
+        assert!(decode_manifest(&signed, &key, 50, 1, "x86_64").is_ok());
+        assert!(decode_manifest(&signed, &key, 100, 1, "x86_64").is_err());
+        assert!(decode_manifest(&signed, &key, 50, 2, "x86_64").is_ok());
+        assert!(decode_manifest(&signed, &key, 50, 3, "x86_64").is_err());
+        assert!(decode_manifest(&signed, &key, 50, 1, "aarch64").is_err());
+        signed[0] ^= 1;
+        assert!(decode_manifest(&signed, &key, 50, 1, "x86_64").is_err());
     }
-
-    log::info!(
-        "Protork update: installing sequence {} ({} bytes)",
-        manifest.sequence,
-        manifest.size
-    );
-    let result = crate::platform::update_me_msi(&temp_path.to_string_lossy(), true);
-    if result.is_err() {
-        std::fs::remove_file(&temp_path).ok();
-    }
-    result
 }

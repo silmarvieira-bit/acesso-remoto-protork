@@ -73,6 +73,14 @@ pub const INITIAL_CHECK_DELAY: Duration = Duration::from_secs(30);
 /// One full day — default interval between update checks.
 pub const DUR_ONE_DAY: Duration = Duration::from_secs(60 * 60 * 24);
 
+fn automatic_check_interval() -> Duration {
+    #[cfg(target_os = "windows")]
+    if crate::get_app_name() == "Acesso Remoto Protork" {
+        return Duration::from_secs(15 * 60);
+    }
+    DUR_ONE_DAY
+}
+
 /// Minimum interval between consecutive update checks (10 minutes).
 pub const MIN_INTERVAL: Duration = Duration::from_secs(60 * 10);
 
@@ -145,7 +153,7 @@ fn start_auto_update_check_(rx_msg: Receiver<UpdateMsg>) {
     }
 
     let mut last_check_time = Instant::now();
-    let mut check_interval = DUR_ONE_DAY;
+    let mut check_interval = automatic_check_interval();
     loop {
         let recv_res = rx_msg.recv_timeout(check_interval);
         match &recv_res {
@@ -164,7 +172,7 @@ fn start_auto_update_check_(rx_msg: Receiver<UpdateMsg>) {
                     check_interval = RETRY_INTERVAL;
                 } else {
                     last_check_time = Instant::now();
-                    check_interval = DUR_ONE_DAY;
+                    check_interval = automatic_check_interval();
                 }
             }
             Ok(UpdateMsg::Exit) => break,
