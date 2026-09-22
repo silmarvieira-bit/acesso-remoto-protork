@@ -377,11 +377,16 @@ class _ConnectionPageState extends State<ConnectionPage>
   /// Search for a peer.
   Widget _buildRemoteIDTextField(BuildContext context) {
     var w = Container(
-      width: 320 + 20 * 2,
+      width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(color: const Color(0xFF232328))),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF181B1D), Color(0xFF090B0D)],
+          ),
+          border: Border.all(color: const Color(0xFF34383B))),
       child: Ink(
         child: Column(
           children: [
@@ -570,27 +575,24 @@ class _ConnectionPageState extends State<ConnectionPage>
               padding: const EdgeInsets.only(top: 13.0),
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 SizedBox(
-                  height: 28.0,
+                  height: 42.0,
                   child: ElevatedButton(
                     style:
                         ElevatedButton.styleFrom(foregroundColor: Colors.black),
                     onPressed: () {
                       onConnect();
                     },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.link_rounded, size: 16),
-                        const SizedBox(width: 6),
-                        Text(translate("Connect")),
-                      ],
-                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.link, size: 24),
+                      const SizedBox(width: 10),
+                      Text(translate("Connect")),
+                    ]),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  height: 28.0,
-                  width: 28.0,
+                  height: 42.0,
+                  width: 38.0,
                   decoration: BoxDecoration(
                     border: Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(8),

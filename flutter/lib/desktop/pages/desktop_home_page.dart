@@ -135,19 +135,27 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       value: gFFI.serverModel,
       child: Container(
         width: isIncomingOnly ? 280.0 : 260.0,
-        color: Theme.of(context).colorScheme.background,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF141719), Color(0xFF050607)],
+          ),
+          border: Border(
+            right: BorderSide(color: MyTheme.accent.withOpacity(0.35)),
+          ),
+        ),
         child: Stack(
           children: [
             Column(
               children: [
-                SingleChildScrollView(
+                Expanded(child: SingleChildScrollView(
                   controller: _leftPaneScrollController,
                   child: Column(
                     key: _childKey,
                     children: children,
                   ),
-                ),
-                Expanded(child: Container())
+                )),
               ],
             ),
             if (isOutgoingOnly)
@@ -256,7 +264,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       margin: margin ?? const EdgeInsets.fromLTRB(12, 5, 12, 5),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF141417),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: highlight
+              ? const [Color(0xFF25220D), Color(0xFF0B0D0E)]
+              : const [Color(0xFF171A1C), Color(0xFF090B0C)],
+        ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: highlight ? borderColor : const Color(0xFF232328),
@@ -303,7 +317,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       ],
                     ),
                   ),
-                  Flexible(
+                  SizedBox(
                     child: GestureDetector(
                       onDoubleTap: () {
                         Clipboard.setData(
