@@ -339,10 +339,10 @@ class _ToolbarTheme {
   static const double height = 20.0;
   static const double dividerHeight = 12.0;
 
-  static const double buttonSize = 44;
-  static const double buttonHMargin = 4;
-  static const double buttonVMargin = 8;
-  static const double iconRadius = 12;
+  static const double buttonSize = 56;
+  static const double buttonHMargin = 5;
+  static const double buttonVMargin = 10;
+  static const double iconRadius = 15;
   static const double elevation = 8;
 
   static BoxDecoration buttonDecoration(Color color) => BoxDecoration(
@@ -351,14 +351,15 @@ class _ToolbarTheme {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color.lerp(color, Colors.white, 0.18)!,
+            Color.lerp(color, Colors.white, 0.30)!,
             color,
-            Color.lerp(color, Colors.black, 0.25)!,
+            Color.lerp(color, Colors.black, 0.35)!,
           ],
+          stops: const [0, 0.38, 1],
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.25)),
+        border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.5),
         boxShadow: const [
-          BoxShadow(color: Colors.black54, offset: Offset(0, 3), blurRadius: 4),
+          BoxShadow(color: Colors.black87, offset: Offset(0, 4), blurRadius: 5),
         ],
       );
 

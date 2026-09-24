@@ -17,8 +17,8 @@ class GoldIconTile extends StatelessWidget {
     required this.icon,
     this.size = 30,
     this.iconSize = 16,
-    this.background = const Color(0xFFFFD600),
-    this.iconColor = const Color(0xFF111111),
+    this.background = const Color(0xFF37300A),
+    this.iconColor = const Color(0xFFFFDE00),
   }) : super(key: key);
 
   @override
@@ -27,11 +27,21 @@ class GoldIconTile extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: background,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [background, const Color(0xFF090B06)],
+        ),
+        border: Border.all(color: const Color(0xFF756414), width: 1),
+        boxShadow: const [
+          BoxShadow(color: Color(0x28FFD600), blurRadius: 9, spreadRadius: 1),
+          BoxShadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 3)),
+        ],
         borderRadius: BorderRadius.circular(size * 0.28),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, size: iconSize, color: iconColor),
+      child: Icon(icon, size: iconSize, color: iconColor,
+          shadows: const [Shadow(color: Color(0x70FFD600), blurRadius: 6)]),
     );
   }
 }
