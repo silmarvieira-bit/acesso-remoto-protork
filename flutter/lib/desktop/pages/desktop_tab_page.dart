@@ -98,7 +98,9 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
           borderRadius: BorderRadius.circular(14),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Scaffold(
+        child: CustomPaint(
+          foregroundPainter: _ProtorkFramePainter(),
+          child: Scaffold(
             backgroundColor: Theme.of(context).colorScheme.background,
             body: DesktopTab(
               controller: tabController,
@@ -112,7 +114,7 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
                   isClose: false,
                 ),
               ),
-            )));
+            ))));
     return isMacOS || kUseCompatibleUiMode
         ? tabWidget
         : Obx(
@@ -123,4 +125,44 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
             ),
           );
   }
+}
+
+/// Decorative strokes never intercept window controls or connection input.
+class _ProtorkFramePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gold = Paint()
+      ..color = MyTheme.accent
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+    final headerWidth = (size.width * 0.33).clamp(180.0, 310.0);
+    final header = Path()
+      ..moveTo(0, 39)
+      ..lineTo(headerWidth - 32, 39)
+      ..lineTo(headerWidth - 10, 17)
+      ..lineTo(headerWidth + 18, 17);
+    canvas.drawPath(header, gold);
+    final sidebar = (size.width * 0.33).clamp(260.0, 310.0);
+    if (size.width > 600 && size.height > 300) {
+      canvas.save();
+      canvas.clipRect(Rect.fromLTWH(0, size.height - 135, sidebar, 135));
+      final ribbon = Path()
+        ..moveTo(sidebar - 115, size.height)
+        ..lineTo(sidebar, size.height - 115)
+        ..lineTo(sidebar, size.height - 78)
+        ..lineTo(sidebar - 78, size.height)
+        ..close();
+      canvas.drawPath(ribbon,
+          Paint()..color = MyTheme.accent.withOpacity(0.07));
+      canvas.drawLine(Offset(sidebar - 135, size.height),
+          Offset(sidebar, size.height - 135), gold);
+      canvas.drawLine(Offset(sidebar - 88, size.height),
+          Offset(sidebar, size.height - 88),
+          Paint()..color = MyTheme.accent.withOpacity(0.30));
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProtorkFramePainter oldDelegate) => false;
 }

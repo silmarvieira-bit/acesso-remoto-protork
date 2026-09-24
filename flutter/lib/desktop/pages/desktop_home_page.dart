@@ -134,7 +134,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     return ChangeNotifierProvider.value(
       value: gFFI.serverModel,
       child: Container(
-        width: isIncomingOnly ? 280.0 : 260.0,
+        width: isIncomingOnly
+            ? 280.0
+            : (MediaQuery.of(context).size.width * 0.33).clamp(260.0, 310.0),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -289,7 +291,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         textBaseline: TextBaseline.alphabetic,
         children: [
           const GoldIconTile(
-                  icon: Icons.person_rounded, size: 28, iconSize: 15)
+                  icon: Icons.person_rounded, size: 44, iconSize: 27)
               .marginOnly(top: 5),
           Expanded(
             child: Padding(
@@ -390,7 +392,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
-          const GoldIconTile(icon: Icons.key_rounded, size: 32, iconSize: 17),
+          const GoldIconTile(icon: Icons.key_rounded, size: 44, iconSize: 28),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 7),
@@ -412,16 +414,18 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                         padding: const EdgeInsets.only(top: 10, bottom: 8),
                         child: Row(
                           children: [
-                            Text(
+                            Expanded(child: Text(
                               'Criar ou alterar senha de acesso',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              softWrap: true,
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: textColor,
+                                color: MyTheme.accent,
                               ),
-                            ),
+                            )),
+                            const Icon(Icons.chevron_right,
+                                color: MyTheme.accent, size: 18),
                           ],
                         ),
                       ),
@@ -441,7 +445,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     return _sidebarCard(
       child: Row(
         children: [
-          const GoldIconTile(icon: Icons.lan_outlined, size: 32, iconSize: 16),
+          const GoldIconTile(icon: Icons.lan_outlined, size: 44, iconSize: 26),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 7),
