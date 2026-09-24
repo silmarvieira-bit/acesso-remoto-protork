@@ -24,6 +24,7 @@ import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import '../../common/shared_state.dart';
 import './popup_menu.dart';
+import './toolbar_button_face.dart';
 import './kb_layout_type_chooser.dart';
 import 'package:flutter_hbb/utils/scale.dart';
 import 'package:flutter_hbb/common/widgets/custom_scale_base.dart';
@@ -340,6 +341,7 @@ class _ToolbarTheme {
   static const double dividerHeight = 12.0;
 
   static const double buttonSize = 56;
+  static const double glyphSize = 30;
   static const double buttonHMargin = 5;
   static const double buttonVMargin = 10;
   static const double iconRadius = 15;
@@ -388,6 +390,9 @@ class _ToolbarTheme {
         padding: MaterialStateProperty.all(_ToolbarTheme.menuPadding),
       );
   static final defaultMenuButtonStyle = ButtonStyle(
+    minimumSize: MaterialStatePropertyAll(Size.zero),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    visualDensity: VisualDensity.standard,
     backgroundColor: MaterialStatePropertyAll(Colors.transparent),
     padding: MaterialStatePropertyAll(EdgeInsets.zero),
     overlayColor: MaterialStatePropertyAll(Colors.transparent),
@@ -973,8 +978,8 @@ class _PinMenu extends StatelessWidget {
         assetName: state.pin ? "assets/pinned.svg" : "assets/unpinned.svg",
         tooltip: state.pin ? 'Unpin Toolbar' : 'Pin Toolbar',
         onPressed: state.switchPin,
-        color: _ToolbarTheme.protorkYellow,
-        hoverColor: _ToolbarTheme.protorkYellowHover,
+        color: const Color(0xFF30465B),
+        hoverColor: const Color(0xFF49657D),
       ),
     );
   }
@@ -1068,10 +1073,11 @@ class _FileTransferMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _IconMenuButton(
-        assetName: 'assets/file_transfer.svg',
+        icon: const Icon(Icons.swap_vert, color: Colors.white,
+            size: _ToolbarTheme.glyphSize),
         tooltip: 'Transferir arquivos',
-        color: _ToolbarTheme.fileGreen,
-        hoverColor: _ToolbarTheme.fileGreenHover,
+        color: const Color(0xFF30465B),
+        hoverColor: const Color(0xFF49657D),
         onPressed: () {
           final token = bind.sessionGetConnToken(sessionId: ffi.sessionId);
           connect(context, id, isFileTransfer: true, connToken: token);
@@ -1340,7 +1346,7 @@ class _MonitorMenu extends StatelessWidget {
       final pi = ffi.ffiModel.pi;
       RxInt display = CurrentDisplayState.find(id);
       final rect = ffi.ffiModel.globalDisplaysRect();
-      if (rect == null) {
+      if (rect == null || rect.height <= 0 || rect.width <= 0) {
         return Offstage();
       }
 
@@ -1370,7 +1376,9 @@ class _MonitorMenu extends StatelessWidget {
                 color: Colors.grey,
                 width: 1.0,
               ),
-              color: display.value == i ? activeBgColor : Colors.white,
+              borderRadius: BorderRadius.circular(5),
+              color: display.value == i
+                  ? activeBgColor : const Color(0xFF253A50),
             ),
             child: Center(
                 child: Text(
@@ -1378,7 +1386,7 @@ class _MonitorMenu extends StatelessWidget {
               style: TextStyle(
                 color: display.value == i
                     ? activeTextColor
-                    : _ToolbarTheme.inactiveColor,
+                    : Colors.white,
                 fontSize: fontSize,
                 fontWeight: FontWeight.bold,
               ),
@@ -2949,34 +2957,26 @@ class _IconMenuButtonState extends State<_IconMenuButton> {
         SvgPicture.asset(
           widget.assetName!,
           colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-          width: _ToolbarTheme.buttonSize,
-          height: _ToolbarTheme.buttonSize,
+          width: _ToolbarTheme.glyphSize,
+          height: _ToolbarTheme.glyphSize,
         );
     var button = SizedBox(
       width: widget.width ?? _ToolbarTheme.buttonSize,
       height: _ToolbarTheme.buttonSize,
       child: MenuItemButton(
-          style: ButtonStyle(
-              backgroundColor: MaterialStatePropertyAll(Colors.transparent),
-              padding: MaterialStatePropertyAll(EdgeInsets.zero),
-              overlayColor: MaterialStatePropertyAll(Colors.transparent)),
+          style: _ToolbarTheme.defaultMenuButtonStyle,
           onHover: (value) => setState(() {
                 hover = value;
               }),
           onPressed: widget.onPressed,
           child: Tooltip(
             message: translate(widget.tooltip),
-            child: Material(
-                type: MaterialType.transparency,
-                child: Ink(
-                    decoration: _ToolbarTheme.buttonDecoration(
-                        hover ? widget.hoverColor : widget.color),
-                    child: SizedBox.expand(
-                      child: Padding(
-                        padding: const EdgeInsets.all(7),
-                        child: Center(child: icon),
-                      ),
-                    ))),
+            child: ToolbarButtonFace(
+                width: widget.width ?? _ToolbarTheme.buttonSize,
+                height: _ToolbarTheme.buttonSize,
+                decoration: _ToolbarTheme.buttonDecoration(
+                    hover ? widget.hoverColor : widget.color),
+                icon: icon),
           )),
     ).marginSymmetric(
         horizontal: widget.hMargin ?? _ToolbarTheme.buttonHMargin,
@@ -3036,8 +3036,8 @@ class _IconSubmenuButtonState extends State<_IconSubmenuButton> {
         SvgPicture.asset(
           widget.svg!,
           colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-          width: _ToolbarTheme.buttonSize,
-          height: _ToolbarTheme.buttonSize,
+          width: _ToolbarTheme.glyphSize,
+          height: _ToolbarTheme.glyphSize,
         );
     final button = SizedBox(
         width: widget.width ?? _ToolbarTheme.buttonSize,
@@ -3051,17 +3051,12 @@ class _IconSubmenuButtonState extends State<_IconSubmenuButton> {
                 }),
             child: Tooltip(
                 message: translate(widget.tooltip),
-                child: Material(
-                    type: MaterialType.transparency,
-                    child: Ink(
-                        decoration: _ToolbarTheme.buttonDecoration(
-                            hover ? widget.hoverColor : widget.color),
-                        child: SizedBox.expand(
-                          child: Padding(
-                            padding: const EdgeInsets.all(7),
-                            child: Center(child: icon),
-                          ),
-                        )))),
+                child: ToolbarButtonFace(
+                    width: widget.width ?? _ToolbarTheme.buttonSize,
+                    height: _ToolbarTheme.buttonSize,
+                    decoration: _ToolbarTheme.buttonDecoration(
+                        hover ? widget.hoverColor : widget.color),
+                    icon: icon)),
             menuChildren: widget
                 .menuChildrenGetter(this)
                 .map((e) => _buildPointerTrackWidget(e, widget.ffi))

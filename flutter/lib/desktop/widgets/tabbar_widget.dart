@@ -636,18 +636,20 @@ class _DesktopTabState extends State<DesktopTab>
                       child: Row(children: [
                         Offstage(
                           offstage: !showLogo,
-                          child: loadIcon(24),
+                          child: Image.asset(
+                            'assets/protork_brand.png',
+                            width: 72,
+                            height: 32,
+                            fit: BoxFit.contain,
+                            semanticLabel: 'Pro Tork Racing Development',
+                          ),
                         ),
                         Offstage(
                             offstage: !showTitle,
-                            child: const Text.rich(
-                              TextSpan(children: [
-                                TextSpan(text: "ProtorK ",
-                                    style: TextStyle(fontWeight: FontWeight.bold)),
-                                TextSpan(text: "Acesso",
-                                    style: TextStyle(color: MyTheme.accent)),
-                              ]),
-                              style: TextStyle(fontSize: 16),
+                            child: Text(
+                              showLogo ? 'Acesso' : 'Pro Tork Acesso',
+                              style: const TextStyle(fontSize: 16,
+                                  color: MyTheme.accent),
                             ).marginOnly(left: 6))
                       ]).marginOnly(
                         left: 5,
