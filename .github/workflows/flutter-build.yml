@@ -248,6 +248,21 @@ jobs:
         shell: bash
         run: bash .github/patches/apply_flutter_3.44_source_patches.sh
 
+      - name: Validate toolbar layout before compiling Windows client
+        working-directory: flutter
+        run: |
+          flutter pub get
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          flutter test --reporter expanded test/toolbar_button_face_test.dart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload toolbar validation image
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: toolbar-validation-${{ matrix.job.arch }}
+          path: flutter/build/toolbar-validation.png
+          if-no-files-found: error
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
