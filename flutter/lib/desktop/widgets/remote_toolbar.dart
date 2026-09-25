@@ -340,11 +340,11 @@ class _ToolbarTheme {
   static const double height = 20.0;
   static const double dividerHeight = 12.0;
 
-  static const double buttonSize = 56;
-  static const double glyphSize = 30;
-  static const double buttonHMargin = 5;
-  static const double buttonVMargin = 10;
-  static const double iconRadius = 15;
+  static const double buttonSize = 40;
+  static const double glyphSize = 24;
+  static const double buttonHMargin = 3;
+  static const double buttonVMargin = 6;
+  static const double iconRadius = 11;
   static const double elevation = 8;
 
   static BoxDecoration buttonDecoration(Color color) => BoxDecoration(
@@ -3415,10 +3415,17 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
         // floats away from the top while dragging and the toolbar looks
         // unmoored. When multi-edge is on we need 2D drag for snap-to-edge.
         axis: widget.multiEdgeEnabled ? null : Axis.horizontal,
-        child: Icon(
-          widget.isHorizontal ? Icons.drag_indicator : Icons.drag_handle,
-          size: 20,
-          color: _ToolbarTheme.protorkYellow,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.move,
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Icon(
+              widget.isHorizontal ? Icons.drag_indicator : Icons.drag_handle,
+              size: 22,
+              color: _ToolbarTheme.protorkYellow,
+            ),
+          ),
         ),
         feedback: widget,
         onDragStarted: () {
@@ -3444,7 +3451,8 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
   @override
   Widget build(BuildContext context) {
     final ButtonStyle buttonStyle = ButtonStyle(
-      minimumSize: MaterialStateProperty.all(const Size(0, 0)),
+      minimumSize: MaterialStateProperty.all(const Size(28, 28)),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       padding: MaterialStateProperty.all(EdgeInsets.zero),
     );
     final isFullscreen = stateGlobal.fullscreen;
@@ -3558,8 +3566,8 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
           borderRadius: widget.borderRadius,
         ),
         child: SizedBox(
-          height: widget.isHorizontal ? 20 : null,
-          width: widget.isHorizontal ? null : 20,
+          height: widget.isHorizontal ? 28 : null,
+          width: widget.isHorizontal ? null : 28,
           child: child,
         ),
       ),
