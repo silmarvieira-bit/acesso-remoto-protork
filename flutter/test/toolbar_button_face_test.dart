@@ -22,11 +22,11 @@ void main() {
             for (final icon in [Icons.push_pin, Icons.bolt, Icons.chat,
                 Icons.keyboard, Icons.mouse, Icons.copy,
                 Icons.content_paste, Icons.swap_vert, Icons.close])
-              Padding(padding: const EdgeInsets.all(5),
-                child: ToolbarButtonFace(width: 56, height: 56,
+              Padding(padding: const EdgeInsets.all(3),
+                child: ToolbarButtonFace(width: 40, height: 40,
                   decoration: BoxDecoration(color: const Color(0xFF30465B),
-                    borderRadius: BorderRadius.circular(15)),
-                  icon: Icon(icon, color: Colors.white, size: 30))),
+                    borderRadius: BorderRadius.circular(11)),
+                  icon: Icon(icon, color: Colors.white, size: 24))),
           ]),
         ]),
       )),
@@ -54,8 +54,8 @@ void main() {
         const faceKey = ValueKey('face');
         const face = ToolbarButtonFace(
           key: faceKey,
-          width: 56,
-          height: 56,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(color: Colors.blue),
           // Simulate artwork with a very large intrinsic size.
           icon: SizedBox(width: 1024, height: 1024,
@@ -74,10 +74,10 @@ void main() {
           ),
         )));
         expect(tester.takeException(), isNull);
-        expect(tester.getSize(find.byKey(faceKey)), const Size(56, 56));
+        expect(tester.getSize(find.byKey(faceKey)), const Size(40, 40));
         final fitted = find.descendant(of: find.byKey(faceKey),
             matching: find.byType(FittedBox));
-        expect(tester.getSize(fitted), const Size(42, 42));
+        expect(tester.getSize(fitted), const Size(26, 26));
         await tester.tap(find.byKey(faceKey));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
