@@ -57,7 +57,7 @@ env:
   PROTORK_DEFAULT_PASSWORD: "${{ secrets.PROTORK_DEFAULT_PASSWORD }}"
   PROTORK_ID_SERVER: "192.168.1.95"
   PROTORK_RELAY_SERVER: "192.168.1.95"
-  PROTORK_SERVER_KEY: "gaPGaYPLnkStKg8zM1jXGUkwEE06yzV7+Su2tAgPBhk="
+  PROTORK_SERVER_KEY: "+ZVYaYdIQxB36QKz6X5msDBpgzX3yrFYBJCSeeGKdsg="
   # Self-hosted update server (see src/protork_update.rs). PROTORK_UPDATE_SEQUENCE
   # must be the exact SEQUENCE passed to `publish.mjs publish` when this build's
   # MSI is published, or clients will never see it as newer.
