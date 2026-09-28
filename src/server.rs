@@ -610,11 +610,18 @@ pub async fn start_server(is_server: bool, no_server: bool) {
                 }
             }
         }
-        // Rotate only the retired key on the existing Protork endpoint.
-        // Preserve deliberate configurations for other servers or keys.
-        if Config::get_option("custom-rendezvous-server") == "192.168.1.95"
-            && Config::get_option("relay-server") == "192.168.1.95"
-            && Config::get_option("key") == "gaPGaYPLnkStKg8zM1jXGUkwEE06yzV7+Su2tAgPBhk="
+        // Accept equivalent default-port addresses and an automatic relay.
+        // Repair only missing/retired keys; preserve unrelated endpoints/keys.
+        if matches!(
+            Config::get_option("custom-rendezvous-server").trim(),
+            "192.168.1.95" | "192.168.1.95:21116"
+        ) && matches!(
+            Config::get_option("relay-server").trim(),
+            "" | "192.168.1.95" | "192.168.1.95:21117"
+        ) && matches!(
+            Config::get_option("key").trim(),
+            "" | "gaPGaYPLnkStKg8zM1jXGUkwEE06yzV7+Su2tAgPBhk="
+        )
         {
             if let Some(key) = option_env!("PROTORK_SERVER_KEY") {
                 if key == "+ZVYaYdIQxB36QKz6X5msDBpgzX3yrFYBJCSeeGKdsg=" {
