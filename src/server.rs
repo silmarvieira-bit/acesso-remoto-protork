@@ -610,6 +610,19 @@ pub async fn start_server(is_server: bool, no_server: bool) {
                 }
             }
         }
+        // Rotate only the retired key on the existing Protork endpoint.
+        // Preserve deliberate configurations for other servers or keys.
+        if Config::get_option("custom-rendezvous-server") == "192.168.1.95"
+            && Config::get_option("relay-server") == "192.168.1.95"
+            && Config::get_option("key") == "gaPGaYPLnkStKg8zM1jXGUkwEE06yzV7+Su2tAgPBhk="
+        {
+            if let Some(key) = option_env!("PROTORK_SERVER_KEY") {
+                if key == "+ZVYaYdIQxB36QKz6X5msDBpgzX3yrFYBJCSeeGKdsg=" {
+                    Config::set_option("key".to_owned(), key.to_owned());
+                    log::info!("Migrated retired Protork ID server public key");
+                }
+            }
+        }
         // Apply the protected build-time Protork password once. A marker keeps
         // later user changes from being overwritten on every service restart.
         if Config::get_option("protork-default-password-initialized") != "Y" {
