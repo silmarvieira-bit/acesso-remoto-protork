@@ -186,7 +186,9 @@ class _PeerCardState extends State<_PeerCard>
                         getOnline(isPortrait ? 4 : 8, peer.online),
                         Expanded(
                             child: Text(
-                          peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
+                          peer.id.startsWith('lan-')
+                              ? (peer.username.isEmpty ? peer.hostname : peer.username)
+                              : (peer.alias.isEmpty ? formatID(peer.id) : peer.alias),
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleSmall,
                         )),
@@ -200,7 +202,7 @@ class _PeerCardState extends State<_PeerCard>
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  name,
+                                  peer.ip.isEmpty ? name : '${peer.ip} · ${peer.hostname}',
                                   style: isPortrait ? null : greyStyle,
                                   textAlign: TextAlign.start,
                                   overflow: TextOverflow.ellipsis,
@@ -368,7 +370,9 @@ class _PeerCardState extends State<_PeerCard>
                         getOnline(8, peer.online),
                         Expanded(
                             child: Text(
-                          peer.alias.isEmpty ? formatID(peer.id) : peer.alias,
+                          peer.id.startsWith('lan-')
+                              ? (peer.username.isEmpty ? peer.hostname : peer.username)
+                              : (peer.alias.isEmpty ? formatID(peer.id) : peer.alias),
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleSmall,
                         )),
@@ -1545,6 +1549,12 @@ void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
     bool isRDP = false,
     bool isTerminal = false}) async {
   var password = '';
+  if (peer.id.startsWith('lan-') &&
+      (await bind.mainGetPeerOption(id: peer.id, key: 'alias')).isEmpty) {
+    await bind.mainSetPeerAlias(
+        id: peer.id,
+        alias: peer.username.isEmpty ? peer.hostname : '${peer.username} · ${peer.hostname}');
+  }
   bool isSharedPassword = false;
   if (tab == PeerTabIndex.ab) {
     // If recent peer's alias is empty, set it to ab's alias

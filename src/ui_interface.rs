@@ -810,6 +810,10 @@ pub fn peer_exists(id: &str) -> bool {
 
 #[inline]
 pub fn get_lan_peers() -> Vec<HashMap<&'static str, String>> {
+    #[cfg(target_os = "windows")]
+    if crate::protork_directory::enabled() {
+        return crate::protork_directory::peers();
+    }
     config::LanPeers::load()
         .peers
         .iter()

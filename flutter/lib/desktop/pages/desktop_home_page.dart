@@ -87,9 +87,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         child: loadLogo(),
       ),
       buildTip(context),
-      if (!isOutgoingOnly) buildIDBoard(context),
-      if (!isOutgoingOnly) buildPasswordBoard(context),
       if (!isOutgoingOnly) buildLocalIpBoard(context),
+      if (!isOutgoingOnly) buildPasswordBoard(context),
       FutureBuilder<Widget>(
         future: Future.value(
             Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
@@ -569,7 +568,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           ),
           if (!isOutgoingOnly)
             Text(
-              translate("desk_tip"),
+              'Acesso pela rede interna usando o IP e a senha deste computador.',
               overflow: TextOverflow.clip,
               style: Theme.of(context).textTheme.bodySmall,
             ),

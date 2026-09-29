@@ -1675,7 +1675,8 @@ Future<bool> matchPeer(
   if (searchText.isEmpty) {
     return true;
   }
-  if (peer.id.toLowerCase().contains(searchText)) {
+  if (peer.id.toLowerCase().contains(searchText) ||
+      peer.ip.toLowerCase().contains(searchText)) {
     return true;
   }
   if (peer.hostname.toLowerCase().contains(searchText) ||

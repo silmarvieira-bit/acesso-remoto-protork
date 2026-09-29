@@ -127,6 +127,8 @@ impl RendezvousMediator {
         }
         check_zombie();
         let server = new_server();
+        #[cfg(target_os = "windows")]
+        crate::protork_directory::start_listener(server.clone());
         if config::option2bool("stop-service", &Config::get_option("stop-service")) {
             crate::test_rendezvous_server();
         }

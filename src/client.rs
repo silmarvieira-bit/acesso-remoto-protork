@@ -256,6 +256,11 @@ impl Client {
             bail!("Incoming only mode");
         }
         // to-do: remember the port for each peer, so that we can retry easier
+        #[cfg(target_os = "windows")]
+        if crate::protork_directory::enabled() && peer.starts_with("lan-") {
+            let (conn, pk) = crate::protork_directory::connect(peer.to_owned()).await?;
+            return Ok(((conn, true, Some(pk), None, "TCP"), (0, "".to_owned()), false));
+        }
         if hbb_common::is_ip_str(peer) {
             return Ok((
                 (
@@ -1859,7 +1864,15 @@ impl LoginConfigHandler {
 
         self.id = id;
         self.conn_type = conn_type;
-        let config = self.load_config();
+        let mut config = self.load_config();
+        #[cfg(target_os = "windows")]
+        if crate::protork_directory::enabled() &&
+            (self.id.starts_with("lan-") || hbb_common::is_ip_str(&self.id)) &&
+            !config.options.contains_key("protork-lan-quality-v1") {
+            config.image_quality = "best".to_owned();
+            config.options.insert("protork-lan-quality-v1".to_owned(), "Y".to_owned());
+            config.store(&self.id);
+        }
         self.remember = !config.password.is_empty();
         self.config = config;
 

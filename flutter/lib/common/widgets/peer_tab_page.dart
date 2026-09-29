@@ -710,7 +710,7 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
           extentOffset: peerSearchTextController.value.text.length);
     });
     return Obx(() => Container(
-          width: stateGlobal.isPortrait.isTrue ? 120 : 140,
+          width: stateGlobal.isPortrait.isTrue ? 160 : 220,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.background,
             borderRadius: BorderRadius.circular(6),
@@ -749,7 +749,7 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
                               ? null
                               : (gFFI.peerTabModel.currentTab ==
                                       PeerTabIndex.lan.index
-                                  ? 'Buscar por nome'
+                                  ? 'Buscar usuário do Windows'
                                   : translate("Search ID")),
                           hintStyle: TextStyle(
                               fontSize: 14, color: Theme.of(context).hintColor),

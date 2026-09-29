@@ -1,0 +1,26 @@
+INSTALAR SOMENTE NO SERVIDOR 192.168.1.95
+
+1. Extraia o ZIP inteiro em uma pasta na Area de Trabalho do servidor.
+2. Abra PowerShell como administrador nessa pasta.
+3. Execute: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Instalar-Diretorio.ps1
+
+Mantem o atualizador e os MSIs existentes. Adiciona diretorio HTTPS na porta
+8789 e libera somente enderecos privados 10/8, 172.16/12 e 192.168/16.
+Nao remove senha/aprovacao de acesso remoto. Nao varre as sub-redes.
+Os clientes novos se registram e informam o usuario Windows automaticamente.
+Build30 e anteriores NAO possuem esse registro. Ainda precisam do novo MSI.
+Nao publica MSI nem confirma atualizacao dos computadores.
+
+O cadastro expira em 90 segundos sem comunicacao. Trocas DHCP sao atualizadas.
+Antes de conectar, o novo cliente consulta novamente o IP e verifica a chave
+da maquina durante a conexao criptografada. O nome do usuario e uma etiqueta,
+nao e prova de identidade nem permissao para acesso.
+
+TLS: certificados ficam em C:\ProgramData\ProtorkDirectory, com acesso somente
+a Administradores, SYSTEM e leitura por LocalService. A chave de atualizacoes
+e usada apenas na instalacao para assinar o certificado PUBLICO do diretorio.
+Nunca copie config.json, server.pfx, private.pem ou chaves privadas para o GitHub.
+O diretorio fica vazio apos reiniciar e repovoa com os registros dos clientes.
+Backup do codigo anterior do servidor HTTP fica em ProtorkDirectory.
+Desativar diretorio: parar/desabilitar tarefa Protork-Diretorio. Nao afeta o
+servidor ID/relay e nao requer apagar MSI, chaves ou configuracoes existentes.

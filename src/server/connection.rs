@@ -2671,7 +2671,13 @@ impl Connection {
                 }
             }
 
-            if !crate::common::is_direct_ip_access(&lr.username) && lr.username != Config::get_id()
+            let directory_identity = {
+                #[cfg(target_os = "windows")]
+                { crate::protork_directory::is_own_id(&lr.username) }
+                #[cfg(not(target_os = "windows"))]
+                { false }
+            };
+            if !directory_identity && !crate::common::is_direct_ip_access(&lr.username) && lr.username != Config::get_id()
             {
                 self.send_login_error(crate::client::LOGIN_MSG_OFFLINE)
                     .await;

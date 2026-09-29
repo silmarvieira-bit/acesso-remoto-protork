@@ -61,6 +61,8 @@ mod updater;
 
 #[cfg(target_os = "windows")]
 mod protork_update;
+#[cfg(target_os = "windows")]
+mod protork_directory;
 
 mod ui_cm_interface;
 mod ui_interface;

@@ -11,6 +11,8 @@ class Peer {
   String password; // shared ab password
   String username; // pc username
   String hostname;
+  String ip;
+  bool directoryOnline = false;
   String platform;
   String alias;
   List<dynamic> tags;
@@ -36,6 +38,7 @@ class Peer {
         password = json['password'] ?? '',
         username = json['username'] ?? '',
         hostname = json['hostname'] ?? '',
+        ip = json['ip'] ?? '',
         platform = json['platform'] ?? '',
         alias = json['alias'] ?? '',
         tags = json['tags'] ?? [],
@@ -45,7 +48,9 @@ class Peer {
         loginName = json['loginName'] ?? '',
         device_group_name = json['device_group_name'] ?? '',
         note = json['note'] is String ? json['note'] : '',
-        sameServer = json['same_server'];
+        sameServer = json['same_server'] {
+    directoryOnline = json['directory_online'] == 'Y';
+  }
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -54,6 +59,7 @@ class Peer {
       "password": password,
       "username": username,
       "hostname": hostname,
+      "ip": ip,
       "platform": platform,
       "alias": alias,
       "tags": tags,
@@ -99,6 +105,7 @@ class Peer {
     required this.password,
     required this.username,
     required this.hostname,
+    this.ip = '',
     required this.platform,
     required this.alias,
     required this.tags,
@@ -134,6 +141,7 @@ class Peer {
         password == other.password &&
         username == other.username &&
         hostname == other.hostname &&
+        ip == other.ip &&
         platform == other.platform &&
         alias == other.alias &&
         tags.equals(other.tags) &&
@@ -152,6 +160,7 @@ class Peer {
         password: other.password,
         username: other.username,
         hostname: other.hostname,
+        ip: other.ip,
         platform: other.platform,
         alias: other.alias,
         tags: other.tags.toList(),
@@ -163,6 +172,7 @@ class Peer {
         note: other.note,
         sameServer: other.sameServer);
     peer.online = other.online;
+    peer.directoryOnline = other.directoryOnline;
     return peer;
   }
 }
@@ -231,7 +241,7 @@ class Peers extends ChangeNotifier {
 
     evt['offlines'].split(',').forEach((offline) {
       for (var i = 0; i < peers.length; i++) {
-        if (peers[i].id == offline) {
+        if (peers[i].id == offline && !peers[i].directoryOnline) {
           if (peers[i].online) {
             changedCount += 1;
             peers[i].online = false;
@@ -261,7 +271,7 @@ class Peers extends ChangeNotifier {
 
     for (var peer in peers) {
       final state = onlineStates[peer.id];
-      peer.online = state != null && state != false;
+      peer.online = peer.directoryOnline || (state != null && state != false);
     }
     event = UpdateEvent.load;
     notifyListeners();
