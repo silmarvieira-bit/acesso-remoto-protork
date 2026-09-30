@@ -159,6 +159,17 @@ pub fn is_own_id(id: &str) -> bool {
 }
 
 fn resolve(id: &str) -> ResultType<Peer> {
+    if private_ip(id) {
+        #[derive(Deserialize)] struct List { peers: Vec<Peer> }
+        let client = client()?;
+        let list: List = serde_json::from_slice(&read_body(client.get(format!("{ENDPOINT}/v1/peers")).send()?, 8 * 1024 * 1024)?)?;
+        if list.peers.len() > 10000 { bail!("Directory peer limit exceeded"); }
+        let mut matches = list.peers.into_iter().filter(|p| p.ip == id);
+        let Some(peer) = matches.next() else { bail!("Computer not registered in the directory; connect by Windows user name after registration"); };
+        if matches.next().is_some() { bail!("Ambiguous IP address; select the Windows user name"); }
+        valid_peer(&peer)?;
+        return Ok(peer);
+    }
     let Some(device) = id.strip_prefix("lan-") else { bail!("Invalid directory identity"); };
     if device.len() != 64 || !device.bytes().all(|b| b.is_ascii_hexdigit()) { bail!("Invalid directory identity"); }
     let client = client()?;
@@ -168,14 +179,30 @@ fn resolve(id: &str) -> ResultType<Peer> {
     Ok(peer)
 }
 
-pub async fn connect(id: String) -> ResultType<(hbb_common::Stream, Vec<u8>)> {
+pub async fn connect(id: String, key: &str, token: &str,
+    conn_type: hbb_common::rendezvous_proto::ConnType, switch_code: &str,
+    force_relay: bool) -> ResultType<(hbb_common::Stream, Vec<u8>, bool)> {
     use hbb_common::{message_proto::{Message, message, PublicKey}, protobuf::Message as _,
         socket_client::connect_tcp_local, timeout, config::{CONNECT_TIMEOUT, READ_TIMEOUT}};
     // Resolve again for every connection/reconnection, never use a cached lease.
     let peer = hbb_common::tokio::task::spawn_blocking(move || resolve(&id)).await??;
     let pk = STANDARD.decode(&peer.public_key)?;
     let Some(sign_pk) = sign::PublicKey::from_slice(&pk) else { bail!("Invalid device key"); };
-    let mut conn = connect_tcp_local(format!("{}:{}", peer.ip, peer.port), None, CONNECT_TIMEOUT).await?;
+    let direct = if force_relay { None } else {
+        match connect_tcp_local(format!("{}:{}", peer.ip, peer.port), None, CONNECT_TIMEOUT.min(3000)).await {
+            Ok(conn) => Some(conn),
+            Err(error) => { log::info!("Private-network direct connection unavailable, trying relay: {error}"); None }
+        }
+    };
+    let is_direct = direct.is_some();
+    let mut conn = match direct {
+        Some(conn) => conn,
+        None => crate::client::Client::request_relay(&peer.peer_id,
+            "192.168.1.95:21117".to_owned(), "192.168.1.95:21116", true,
+            key, token, conn_type, switch_code).await?,
+    };
+    // Both transports MUST prove the fresh directory device key before credentials.
+    // A failed identity handshake is terminal, never a reason to downgrade security.
     let Some(bytes) = timeout(READ_TIMEOUT, conn.next()).await? else { bail!("Peer disconnected"); };
     let msg = Message::parse_from_bytes(&bytes?)?;
     let Some(message::Union::SignedId(si)) = msg.union else { bail!("Secure LAN handshake required"); };
@@ -186,7 +213,7 @@ pub async fn connect(id: String) -> ResultType<(hbb_common::Stream, Vec<u8>)> {
     msg.set_public_key(PublicKey { asymmetric_value, symmetric_value, ..Default::default() });
     timeout(CONNECT_TIMEOUT, conn.send(&msg)).await??;
     conn.set_key(key);
-    Ok((conn, pk))
+    Ok((conn, pk, is_direct))
 }
 
 pub fn start_listener(server: crate::server::ServerPtr) {

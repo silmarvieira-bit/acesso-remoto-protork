@@ -23,11 +23,11 @@ test('username and DHCP address update on same stable device', () => {
   assert.equal(d.register('10.10.2.4', registration(d, k, '10.10.2.4', { username: 'Joao' })), id);
   assert.equal(d.list().length, 1); assert.equal(d.get(id).ip, '10.10.2.4'); assert.equal(d.get(id).username, 'Joao');
 });
-test('expired peers disappear; IP reassignment evicts old device', () => {
+test('devices behind the same NAT coexist and expired leases disappear', () => {
   let now = 1000; const d = new Directory(() => now); const a = device(); const b = device();
   const old = d.register('10.0.0.2', registration(d, a, '10.0.0.2'));
   d.register('10.0.0.2', registration(d, b, '10.0.0.2'));
-  assert.equal(d.get(old), undefined); assert.equal(d.list().length, 1);
+  assert.ok(d.get(old)); assert.equal(d.list().length, 2);
   now += 90000; assert.equal(d.list().length, 0);
 });
 test('forgery, replay, source-IP swap and expired nonce are rejected', () => {

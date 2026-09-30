@@ -64,7 +64,8 @@ export class Directory {
     if (!this.peers.has(device) && this.peers.size >= limit) throw Error('Directory full');
     // A new lease replaces the previous occupant. An old device record must not
     // be offered at an address now reported by a different device.
-    for (const [key, previous] of this.peers) if (previous.ip === ip && key !== device) this.peers.delete(key);
+    // Several authenticated devices may share a NAT gateway. Identity, not IP,
+    // owns a record. Old DHCP leases expire; clients pin the device handshake.
     this.peers.set(device, { device, ip, publicKey: item.publicKey, peerId: item.peerId,
       username: item.username, hostname: item.hostname, platform: 'Windows',
       expires: this.now() + ttl, port: 21120 });

@@ -257,9 +257,11 @@ impl Client {
         }
         // to-do: remember the port for each peer, so that we can retry easier
         #[cfg(target_os = "windows")]
-        if crate::protork_directory::enabled() && peer.starts_with("lan-") {
-            let (conn, pk) = crate::protork_directory::connect(peer.to_owned()).await?;
-            return Ok(((conn, true, Some(pk), None, "TCP"), (0, "".to_owned()), false));
+        if crate::protork_directory::enabled() &&
+            (peer.starts_with("lan-") || crate::protork_directory::private_ip(peer)) {
+            let (conn, pk, direct) = crate::protork_directory::connect(peer.to_owned(),
+                key, token, conn_type, &interface.get_switch_code(), interface.is_force_relay()).await?;
+            return Ok(((conn, direct, Some(pk), None, if direct { "TCP" } else { "Relay" }), (0, "".to_owned()), false));
         }
         if hbb_common::is_ip_str(peer) {
             return Ok((
@@ -844,7 +846,7 @@ impl Client {
     }
 
     /// Request a relay connection to the server.
-    async fn request_relay(
+    pub(crate) async fn request_relay(
         peer: &str,
         relay_server: String,
         rendezvous_server: &str,
