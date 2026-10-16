@@ -63,6 +63,7 @@ fn initialize(app_dir: &str, custom_client_config: &str) {
         hbb_common::init_log(false, "");
         #[cfg(feature = "mediacodec")]
         scrap::mediacodec::check_mediacodec();
+        crate::protork_android::initialize();
         crate::common::test_rendezvous_server();
         crate::common::test_nat_type();
     }
